@@ -7,3 +7,9 @@ edition = "2021"
 
 [dependencies]
 dilate = { git = "https://github.com/alexmadeathing/dilate.git" }
+
+[dev-dependencies]
+serde = { version = "1.0.136", features = ["derive"] } # For test data serialisation
+serde_json = "1.0.78" # For test data serialisation
+lazy_static = "1.4.0" # For test data
+paste = "1.0.6" # For generation of multi-dimensional, multi-type, test names

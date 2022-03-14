@@ -1,6 +1,9 @@
 pub mod morton_curve;
 
-pub use morton_curve::MortonCurve;
+#[cfg(test)]
+mod test_data;
+
+pub use morton_curve::Morton;
 
 #[derive(Clone, Copy, Debug)]
 pub enum SearchDirection {
@@ -10,27 +13,19 @@ pub enum SearchDirection {
 
 // I'd really love to get rid of the generic parameter here but I think it's waiting on:
 // https://github.com/rust-lang/rust/issues/76560
-pub trait Coords<const D: usize> {
+pub trait Encoding<const D: usize> {
     type Coord;
-    type Index;
+    const COORD_MAX: Self::Coord;
 
-    fn from_coords(coords: [Self::Coord; D]) -> Self::Index;
-    fn coords(index: Self::Index) -> [Self::Coord; D];
+    fn from_coords(coords: [Self::Coord; D]) -> Self;
+    fn coords(&self) -> [Self::Coord; D];
 }
 
 pub trait Siblings {
-    type Index;
-
-    fn sibling_on_axis(index: Self::Index, axis: usize) -> Self::Index;
-    fn sibling_or_self_on_axis(index: Self::Index, axis: usize, search_direction: SearchDirection) -> Self::Index;
+    fn sibling_on_axis(&self, axis: usize) -> Self;
+    fn sibling_or_self_on_axis(&self, axis: usize, search_direction: SearchDirection) -> Self;
 }
 
 pub trait Neighbours {
-    type Index;
-
-    fn neighbour_on_axis(index: Self::Index, axis: usize, search_direction: SearchDirection) -> Self::Index;
-}
-
-#[cfg(test)]
-mod tests {
+    fn neighbour_on_axis(&self, axis: usize, search_direction: SearchDirection) -> Self;
 }
