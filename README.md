@@ -90,8 +90,6 @@ For feature requests, please [submit a feature request](https://github.com/alexm
 
 If you have ideas and want to contribute directly, please start by creating an [Idea discussion](https://github.com/alexmadeathing/insides/discussions/new) in the discussions area. Allow others to comment prior to committing to doing the work. When all parties agree on the design, the work may begin. When your code is ready to be published, please submit a pull request referring back to your Idea discussion. We are unlikely to accept a pull request that has not gone through this process, unless it is for a very small change.
 
-# References and Acknowledgments
-
 # License
 
 insides is licensed under the [Anti-Capitalist Software License (v 1.4)](https://github.com/alexmadeathing/insides/blob/main/LICENSE.md). This means it is free and open source for use by individuals and organizations that do not operate by capitalist principles.
