@@ -20,7 +20,7 @@ your applications.
 We currently only support Morton Encoding, but the interface will support
 other curve implementations, such as Hilbert - and we have plans to include them soon.
 
-# Goals
+# Features
 * High performance - Ready to use in performance sensitive contexts
 * Multiple types - Supports `u8`, `u16`, `u32`, `u64`, `u128`, `usize` (signed versions not yet planned)
 * N-dimensional - Suitable for multi-dimensional applications (up to 16 dimensions under certain conditions)
