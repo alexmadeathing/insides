@@ -81,7 +81,18 @@ mod internal {
 
 use internal::NumTraits;
 
-pub trait MortonIndex: dilate::DilatableType + internal::NumTraits {}
+/// Trait wrapper for coordinates used by [Morton]
+pub trait MortonCoord: dilate::DilatableType + internal::NumTraits + Ord {}
+
+impl MortonCoord for u8 {}
+impl MortonCoord for u16 {}
+impl MortonCoord for u32 {}
+impl MortonCoord for u64 {}
+impl MortonCoord for u128 {}
+impl MortonCoord for usize {}
+
+/// Trait wrapper for index used by [Morton]
+pub trait MortonIndex: dilate::DilatableType + internal::NumTraits + Ord {}
 
 impl MortonIndex for u8 {}
 impl MortonIndex for u16 {}
@@ -90,18 +101,63 @@ impl MortonIndex for u64 {}
 impl MortonIndex for u128 {}
 impl MortonIndex for usize {}
 
+/// A Morton encoded space filling curve implementation
+/// 
+/// Morton encoding, also known as a
+/// [Z-order curve](https://en.wikipedia.org/wiki/Z-order_curve), is a space
+/// filling algorithm which maps a multidimensional set of coordinates to one
+/// dimension, achieved by interleaving the bit sequence of each coordinate
+/// value.
+/// 
+/// Whilst other encoding methods may exhibit better spatial locality (such as
+/// the Hilbert curve), the Morton curve offers excellent CPU performance,
+/// since most behaviours can be reduced to a simple set of bitwise operations,
+/// making it an ideal choice for applications such and quad trees and octrees.
+/// 
+/// # Examples
+/// ```rust
+/// use insides::*;
+/// 
+/// let location = Morton::<Expand<u16, 3>, 3>::from_coords([1, 2, 3]);
+/// 
+/// assert_eq!(location.index(), 0b110101);
+/// assert_eq!(location.coords(), [1, 2, 3]);
+/// ```
 // Until we have complex generic constants, we have to pass D in here (needed by coords)
 // Waiting on: https://github.com/rust-lang/rust/issues/76560
 #[derive(Clone, Copy, Default, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Morton<DM, const D: usize>(DM::Dilated)
 where
-    DM: DilationMethod;
+    // When https://github.com/rust-lang/rust/issues/52662 is available, we can clean this up
+    DM: DilationMethod,
+    DM::Undilated: MortonCoord,
+    DM::Dilated: MortonIndex;
 
 impl<DM, const D: usize> Morton<DM, D>
 where
+    // When https://github.com/rust-lang/rust/issues/52662 is available, we can clean this up
     DM: DilationMethod,
-    DM::Dilated: Ord,
+    DM::Undilated: MortonCoord,
+    DM::Dilated: MortonIndex,
 {
+    /// Create a new Morton location from a pre-encoded Morton index
+    /// 
+    /// This function is provided for situations where an existing Morton
+    /// encoded index is available and you wish to use the various
+    /// manipulation methods provided by this library.
+    /// 
+    /// # Panics
+    /// Panics if parameter 'index' is greater than the dilated mask (DM::DILATED_MASK)
+    /// 
+    /// # Examples
+    /// ```rust
+    /// use insides::*;
+    /// 
+    /// let location = Morton::<Expand<u16, 3>, 3>::new(0b110101);
+    /// 
+    /// assert_eq!(location.index(), 0b110101);
+    /// assert_eq!(location.coords(), [1, 2, 3]);
+    /// ```
     #[inline]
     pub fn new(index: DM::Dilated) -> Self {
         debug_assert!(
@@ -110,21 +166,19 @@ where
         );
         Self(index)
     }
-
-    #[inline]
-    pub fn index(&self) -> DM::Dilated {
-        self.0
-    }
 }
 
 impl<DM, const D: usize> Encoding<D> for Morton<DM, D>
 where
+    // When https://github.com/rust-lang/rust/issues/52662 is available, we can clean this up
     DM: DilationMethod,
-    DM::Undilated: Ord,
+    DM::Undilated: MortonCoord,
     DM::Dilated: MortonIndex,
 {
     type Coord = DM::Undilated;
+    type Index = DM::Dilated;
     const COORD_MAX: Self::Coord = DM::UNDILATED_MAX;
+    const INDEX_MAX: Self::Index = DM::DILATED_MASK;
 
     #[inline]
     fn from_coords(coords: [Self::Coord; D]) -> Self {
@@ -149,11 +203,18 @@ where
             coord
         })
     }
+
+    #[inline]
+    fn index(&self) -> DM::Dilated {
+        self.0
+    }
 }
 
-impl<DM, const D: usize> Siblings for Morton<DM, D>
+impl<DM, const D: usize> Siblings<D> for Morton<DM, D>
 where
+    // When https://github.com/rust-lang/rust/issues/52662 is available, we can clean this up
     DM: DilationMethod,
+    DM::Undilated: MortonCoord,
     DM::Dilated: MortonIndex,
 {
     #[inline]
@@ -177,13 +238,12 @@ where
     }
 }
 
-impl<DM, const D: usize> Neighbours for Morton<DM, D>
+impl<DM, const D: usize> Neighbours<D> for Morton<DM, D>
 where
+    // When https://github.com/rust-lang/rust/issues/52662 is available, we can clean this up
     DM: DilationMethod,
+    DM::Undilated: MortonCoord,
     DM::Dilated: MortonIndex,
-
-    Self: Encoding<D>,
-    <Self as Encoding<D>>::Coord: MortonIndex,
 {
     #[inline]
     fn neighbour_on_axis(&self, axis: usize, direction: QueryDirection) -> Self {
