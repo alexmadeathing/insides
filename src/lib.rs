@@ -75,7 +75,9 @@
 /// Morton curve implementation
 pub mod morton_curve;
 
+#[doc(hidden)]
 pub use dilate::{Expand, Fixed};
+
 pub use morton_curve::Morton;
 
 /// Direction to search within an axis when making queries
