@@ -10,9 +10,9 @@ For migration notes, please see: https://github.com/alexmadeathing/insides/relea
 # insides
 A compact, high performance space filling curve library for Rust.
 
-This library provides a set of space filling curve implementations and an
-abstract interface to generalise interactions and promote flexibility in
-your applications.
+This library provides an abstract interface to generalise interactions with
+space filling curves as well as a morton curve implementation and
+supporting manipulation methods.
 
 # Supported Curves
 * Morton - A morton, or Z-order, curve implementation
