@@ -10,7 +10,15 @@ For migration notes, please see: https://github.com/alexmadeathing/insides/relea
 # insides
 A compact, high performance space filling curve library for Rust.
 
+This library provides a set of space filling curve implementations and an
+abstract interface to generalise interactions and promote flexibility in
+your applications.
+
 # Supported Curves
+* Morton - A morton, or Z-order, curve implementation
+
+We currently only support Morton Encoding, but the interface will support
+other curve implementations, such as Hilbert - and we have plans to include them soon.
 
 # Goals
 * High performance - Ready to use in performance sensitive contexts
@@ -24,22 +32,20 @@ A compact, high performance space filling curve library for Rust.
 First, link insides into your project's cargo.toml.
 
 Check for the latest version at [crates.io](https://crates.io/crates/insides):
-```
+```toml
 [dependencies]
 insides = "0.1.0"
 ```
 
 Next, import insides into your project and try out some of the features:
 
-```
+```rust
 use insides::*;
-
-let xyz = [1, 2, 3];
 
 // Create a 3D morton location using u16 coordinate indices
 // At the moment, we have to specify the number of dimensions twice, sorry!
 // (this will change with improvements to Rust const generics)
-let location = Morton::<Expand<u16, 3>, 3>::from_coords(xyz);
+let location = Morton::<Expand<u16, 3>, 3>::from_coords([1, 2, 3]);
 
 // Access raw morton location index
 // Useful as a map key or array index!
