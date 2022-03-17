@@ -55,30 +55,25 @@ let location = Morton::<Expand<u16, 3>, 3>::from_coords([1, 2, 3]);
 assert_eq!(location.index(), 0b110101);
 
 // Get neighbour in the negative X axis
-let neighbour_a = location.neighbour_on_axis(0, QueryDirection::Negative);
-assert_eq!(neighbour_a.coords(), [0, 2, 3]);
+assert_eq!(location.neighbour_on_axis(0, QueryDirection::Negative).coords(), [0, 2, 3]);
 
 // Get neighbour in the positive Y axis
-let neighbour_b = location.neighbour_on_axis(1, QueryDirection::Positive);
-assert_eq!(neighbour_b.coords(), [1, 3, 3]);
+assert_eq!(location.neighbour_on_axis(1, QueryDirection::Positive).coords(), [1, 3, 3]);
 
 // Get sibling on Z axis
 // Its use is subtle and may not be apparent at first glance. Imagine the
-// world is divided into a grid where each cell contains 8 siblings (in the
-// 3D case). This method operates upon that grid. This is mostly useful
-// when applied to tree-like structures.
-let sibling_a = location.sibling_on_axis(2);
-assert_eq!(sibling_a.coords(), [1, 2, 2]);
+// world is divided into a grid where each cell contains a cluster of 8
+// siblings (in the 3D case). This method operates upon that grid. This is
+// mostly useful when applied to tree-like structures.
+let sibling = location.sibling_on_axis(2);
+assert_eq!(sibling.coords(), [1, 2, 2]);
 
 // Calling again from the sibling gets our original location
-let sibling_b = sibling_a.sibling_on_axis(2);
-assert_eq!(sibling_b, location);
+assert_eq!(sibling.sibling_on_axis(2), location);
 
 // This gets, either the sibling, or the same location, on the Z axis,
 // depending on which is further in the query direction.
-// This is useful when you want to find the locations on one edge of a cell.
-let sibling_or_same = location.sibling_or_same_on_axis(2, QueryDirection::Positive);
-assert_eq!(sibling_or_same.coords(), [1, 2, 3]);
+assert_eq!(location.sibling_or_same_on_axis(2, QueryDirection::Positive).coords(), [1, 2, 3]);
 ```
 
 For more detailed info, please see the [code reference](https://docs.rs/insides/latest/insides/).
