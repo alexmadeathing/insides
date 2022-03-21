@@ -18,8 +18,7 @@
 		{
 			"type": "cargo",
 			"command": "test",
-//			"args": [ "--", "--nocapture", "--test-threads=1" ], // <-- To enable println in tests and use 1 thread
-			"args": [ ],
+			"args": [],
 			"problemMatcher": [
 				"$rustc"
 			],
@@ -34,13 +33,10 @@
 			"type": "shell",
 			"label": "draw morton",
 			"group": "build",
-			"command": "cargo build --release & ./target/release/draw-curve morton -d 3 -o \"../images/morton.gif\" -r 15 -pf",
+			"command": "cargo build --release & ./target/release/draw-curve morton -d 3 -o \"morton.gif\" -r 15 -pf",
 			"args": [],
 			"windows": {
-				"command": "cargo build --release & .\\target\\release\\draw-curve.exe morton -d 3 -o \"..\\images\\morton.gif\" -r 15 -pf"
-			},
-			"options": {
-				"cwd": ".\\draw-curve",
+				"command": "cargo build --release & .\\target\\release\\draw-curve.exe morton -d 3 -o \"morton.gif\" -r 15 -pf"
 			},
 			"presentation": {
 				"reveal": "always",
@@ -51,13 +47,10 @@
 			"type": "shell",
 			"label": "draw hilbert",
 			"group": "build",
-			"command": "cargo build --release & ./target/release/draw-curve hilbert -d 3 -o \"../images/hilbert.gif\" -r 15 -pf",
+			"command": "cargo build --release & ./target/release/draw-curve hilbert -d 3 -o \"hilbert.gif\" -r 15 -pf",
 			"args": [],
 			"windows": {
-				"command": "cargo build --release & .\\target\\release\\draw-curve.exe hilbert -d 3 -o \"..\\images\\hilbert.gif\" -r 15 -pf"
-			},
-			"options": {
-				"cwd": ".\\draw-curve",
+				"command": "cargo build --release & .\\target\\release\\draw-curve.exe hilbert -d 3 -o \"hilbert.gif\" -r 15 -pf"
 			},
 			"presentation": {
 				"reveal": "always",
