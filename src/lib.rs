@@ -73,12 +73,12 @@
 //! ```
 
 /// Morton curve implementation
-pub mod morton_curve;
+pub mod morton;
 
 #[doc(hidden)]
 pub use dilate::{Expand, Fixed};
 
-pub use morton_curve::Morton;
+pub use morton::Morton;
 
 /// Direction to search within an axis when making queries
 #[derive(Clone, Copy, Debug)]
@@ -105,6 +105,26 @@ pub trait Encoding<const D: usize> {
 
     /// Maximum value for an encoded index
     const INDEX_MAX: Self::Index;
+
+    /// Create a new location from a pre-encoded curve index
+    /// 
+    /// This function is provided for situations where an existing
+    /// encoded index is available and you wish to use the various
+    /// manipulation methods provided by this library.
+    /// 
+    /// # Panics
+    /// Panics if parameter 'index' is greater than Self::INDEX_MAX
+    /// 
+    /// # Examples
+    /// ```rust
+    /// use insides::*;
+    /// 
+    /// let location = Morton::<Expand<u16, 3>, 3>::from_index(0b110101);
+    /// 
+    /// assert_eq!(location.index(), 0b110101);
+    /// assert_eq!(location.coords(), [1, 2, 3]);
+    /// ```
+    fn from_index(index: Self::Index) -> Self;
 
     /// Encode curve location from coordinates
     /// 
