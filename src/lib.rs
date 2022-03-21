@@ -72,13 +72,38 @@
 //! assert_eq!(location.coords(), [1, 2, 3]);
 //! ```
 
-/// Morton curve implementation
-pub mod morton;
-
 #[doc(hidden)]
 pub use dilate::{Expand, Fixed};
 
+/// Morton curve implementation
+pub mod morton;
 pub use morton::Morton;
+
+/// Hilbert curve implementation
+pub mod hilbert;
+pub use hilbert::Hilbert;
+
+pub(crate) mod internal;
+
+/// Trait wrapper for coordinates
+pub trait Coord: internal::NumTraits {}
+
+impl Coord for u8 {}
+impl Coord for u16 {}
+impl Coord for u32 {}
+impl Coord for u64 {}
+impl Coord for u128 {}
+impl Coord for usize {}
+
+/// Trait wrapper for index used by [Hilbert]
+pub trait Index: internal::NumTraits {}
+
+impl Index for u8 {}
+impl Index for u16 {}
+impl Index for u32 {}
+impl Index for u64 {}
+impl Index for u128 {}
+impl Index for usize {}
 
 /// Direction to search within an axis when making queries
 #[derive(Clone, Copy, Debug)]
@@ -95,10 +120,10 @@ pub enum QueryDirection {
 // https://github.com/rust-lang/rust/issues/76560
 pub trait Encoding<const D: usize> {
     /// Coordinate type
-    type Coord;
+    type Coord: Coord;
 
     /// Index type
-    type Index;
+    type Index: Index;
 
     /// Maximum value for a single coordinate
     const COORD_MAX: Self::Coord;

@@ -12,6 +12,7 @@ const MAX_DEPTH: usize = 16;
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ArgEnum)]
 enum Curve {
     Morton,
+    Hilbert,
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Default)]
@@ -113,6 +114,7 @@ fn draw<B>(mut backend: B, args: &Args) where B: DrawingBackend {
 
     match args.curve {
         Curve::Morton => draw_curve::<Morton::<Fixed<u32, 2>, 2>, _>(&mut backend, args),
+        Curve::Hilbert => draw_curve::<Hilbert::<Fixed<u32, 2>, 2>, _>(&mut backend, args),
     };
 }
 

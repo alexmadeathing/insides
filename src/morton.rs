@@ -35,71 +35,9 @@
 
 use dilate::*;
 
-use super::{Encoding, Neighbours, QueryDirection, Siblings};
+use super::{Coord, Index, Encoding, Neighbours, QueryDirection, Siblings};
 
-mod internal {
-    pub trait NumTraits {
-        // Add methods as needed for this module
-        fn zero() -> Self;
-        fn one() -> Self;
-        fn shl(self, amount: usize) -> Self;
-        fn shr(self, amount: usize) -> Self;
-        fn bit_not(self) -> Self;
-        fn bit_and(self, rhs: Self) -> Self;
-        fn bit_or(self, rhs: Self) -> Self;
-        fn bit_or_assign(&mut self, rhs: Self);
-        fn bit_xor(self, rhs: Self) -> Self;
-    }
-
-    macro_rules! impl_num_traits {
-        ($($t:ty),+) => {$(
-            impl NumTraits for $t {
-                #[inline]
-                fn zero() -> Self { 0 }
-                #[inline]
-                fn one() -> Self { 1 }
-                #[inline]
-                fn shl(self, amount: usize) -> Self { self << amount }
-                #[inline]
-                fn shr(self, amount: usize) -> Self { self >> amount }
-                #[inline]
-                fn bit_not(self) -> Self { !self }
-                #[inline]
-                fn bit_and(self, rhs: Self) -> Self { self & rhs }
-                #[inline]
-                fn bit_or(self, rhs: Self) -> Self { self | rhs }
-                #[inline]
-                fn bit_or_assign(&mut self, rhs: Self) { *self |= rhs; }
-                #[inline]
-                fn bit_xor(self, rhs: Self) -> Self { self ^ rhs }
-            }
-        )+};
-    }
-
-    impl_num_traits!(u8, u16, u32, u64, u128, usize);
-}
-
-use internal::NumTraits;
-
-/// Trait wrapper for coordinates used by [Morton]
-pub trait MortonCoord: dilate::DilatableType + internal::NumTraits + Ord {}
-
-impl MortonCoord for u8 {}
-impl MortonCoord for u16 {}
-impl MortonCoord for u32 {}
-impl MortonCoord for u64 {}
-impl MortonCoord for u128 {}
-impl MortonCoord for usize {}
-
-/// Trait wrapper for index used by [Morton]
-pub trait MortonIndex: dilate::DilatableType + internal::NumTraits + Ord {}
-
-impl MortonIndex for u8 {}
-impl MortonIndex for u16 {}
-impl MortonIndex for u32 {}
-impl MortonIndex for u64 {}
-impl MortonIndex for u128 {}
-impl MortonIndex for usize {}
+use crate::internal::NumTraits;
 
 /// A Morton encoded space filling curve implementation
 /// 
@@ -130,15 +68,15 @@ pub struct Morton<DM, const D: usize>(DM::Dilated)
 where
     // When https://github.com/rust-lang/rust/issues/52662 is available, we can clean this up
     DM: DilationMethod,
-    DM::Undilated: MortonCoord,
-    DM::Dilated: MortonIndex;
+    DM::Undilated: Coord,
+    DM::Dilated: Index;
 
 impl<DM, const D: usize> Encoding<D> for Morton<DM, D>
 where
     // When https://github.com/rust-lang/rust/issues/52662 is available, we can clean this up
     DM: DilationMethod,
-    DM::Undilated: MortonCoord,
-    DM::Dilated: MortonIndex,
+    DM::Undilated: Coord,
+    DM::Dilated: Index,
 {
     type Coord = DM::Undilated;
     type Index = DM::Dilated;
@@ -162,7 +100,7 @@ where
         );
         let mut v = DM::Dilated::zero();
         for (axis, coord) in coords.into_iter().enumerate() {
-            v.bit_or_assign(DM::dilate(coord).value().shl(axis));
+            v = v.bit_or(DM::dilate(coord).value().shl(axis));
         }
         Self(v)
     }
@@ -188,8 +126,8 @@ impl<DM, const D: usize> Siblings<D> for Morton<DM, D>
 where
     // When https://github.com/rust-lang/rust/issues/52662 is available, we can clean this up
     DM: DilationMethod,
-    DM::Undilated: MortonCoord,
-    DM::Dilated: MortonIndex,
+    DM::Undilated: Coord,
+    DM::Dilated: Index,
 {
     #[inline]
     fn sibling_on_axis(&self, axis: usize) -> Self {
@@ -216,8 +154,8 @@ impl<DM, const D: usize> Neighbours<D> for Morton<DM, D>
 where
     // When https://github.com/rust-lang/rust/issues/52662 is available, we can clean this up
     DM: DilationMethod,
-    DM::Undilated: MortonCoord,
-    DM::Dilated: MortonIndex,
+    DM::Undilated: Coord,
+    DM::Dilated: Index,
 {
     #[inline]
     fn neighbour_on_axis(&self, axis: usize, direction: QueryDirection) -> Self {
