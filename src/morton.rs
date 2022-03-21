@@ -51,7 +51,7 @@ mod internal {
         fn bit_xor(self, rhs: Self) -> Self;
     }
 
-    macro_rules! impl_morton_index {
+    macro_rules! impl_num_traits {
         ($($t:ty),+) => {$(
             impl NumTraits for $t {
                 #[inline]
@@ -76,7 +76,7 @@ mod internal {
         )+};
     }
 
-    impl_morton_index!(u8, u16, u32, u64, u128, usize);
+    impl_num_traits!(u8, u16, u32, u64, u128, usize);
 }
 
 use internal::NumTraits;
@@ -133,41 +133,6 @@ where
     DM::Undilated: MortonCoord,
     DM::Dilated: MortonIndex;
 
-impl<DM, const D: usize> Morton<DM, D>
-where
-    // When https://github.com/rust-lang/rust/issues/52662 is available, we can clean this up
-    DM: DilationMethod,
-    DM::Undilated: MortonCoord,
-    DM::Dilated: MortonIndex,
-{
-    /// Create a new Morton location from a pre-encoded Morton index
-    /// 
-    /// This function is provided for situations where an existing Morton
-    /// encoded index is available and you wish to use the various
-    /// manipulation methods provided by this library.
-    /// 
-    /// # Panics
-    /// Panics if parameter 'index' is greater than the dilated mask (DM::DILATED_MASK)
-    /// 
-    /// # Examples
-    /// ```rust
-    /// use insides::*;
-    /// 
-    /// let location = Morton::<Expand<u16, 3>, 3>::new(0b110101);
-    /// 
-    /// assert_eq!(location.index(), 0b110101);
-    /// assert_eq!(location.coords(), [1, 2, 3]);
-    /// ```
-    #[inline]
-    pub fn new(index: DM::Dilated) -> Self {
-        debug_assert!(
-            index <= DM::DILATED_MASK,
-            "Parameter 'index' exceeds maximum"
-        );
-        Self(index)
-    }
-}
-
 impl<DM, const D: usize> Encoding<D> for Morton<DM, D>
 where
     // When https://github.com/rust-lang/rust/issues/52662 is available, we can clean this up
@@ -179,6 +144,15 @@ where
     type Index = DM::Dilated;
     const COORD_MAX: Self::Coord = DM::UNDILATED_MAX;
     const INDEX_MAX: Self::Index = DM::DILATED_MASK;
+
+    #[inline]
+    fn from_index(index: Self::Index) -> Self {
+        debug_assert!(
+            index <= Self::INDEX_MAX,
+            "Parameter 'index' exceeds maximum"
+        );
+        Self(index)
+    }
 
     #[inline]
     fn from_coords(coords: [Self::Coord; D]) -> Self {
@@ -205,7 +179,7 @@ where
     }
 
     #[inline]
-    fn index(&self) -> DM::Dilated {
+    fn index(&self) -> Self::Index {
         self.0
     }
 }
@@ -334,19 +308,19 @@ mod tests {
                     #[test]
                     #[should_panic(expected = "Parameter 'index' exceeds maximum")]
                     #[allow(arithmetic_overflow)]
-                    fn new_too_large_panics() {
+                    fn from_index_too_large_panics() {
                         if INDEX_MAX != Index::MAX {
-                            TestedCurve::new(INDEX_MAX + 1);
+                            TestedCurve::from_index(INDEX_MAX + 1);
                         } else {
                             panic!("Parameter 'index' exceeds maximum");
                         }
                     }
 
                     #[test]
-                    fn new_stores_unmodified_index() {
-                        assert_eq!(TestedCurve::new(0).0, 0);
-                        assert_eq!(TestedCurve::new(0b10101).0, 0b10101);
-                        assert_eq!(TestedCurve::new(INDEX_MAX).0, INDEX_MAX);
+                    fn from_index_stores_unmodified_index() {
+                        assert_eq!(TestedCurve::from_index(0).0, 0);
+                        assert_eq!(TestedCurve::from_index(0b10101).0, 0b10101);
+                        assert_eq!(TestedCurve::from_index(INDEX_MAX).0, INDEX_MAX);
                     }
 
                     #[test]
