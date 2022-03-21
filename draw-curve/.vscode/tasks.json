@@ -18,8 +18,7 @@
 		{
 			"type": "cargo",
 			"command": "test",
-//			"args": [ "--", "--nocapture", "--test-threads=1" ], // <-- To enable println in tests and use 1 thread
-			"args": [ ],
+			"args": [],
 			"problemMatcher": [
 				"$rustc"
 			],
@@ -39,9 +38,6 @@
 			"windows": {
 				"command": "cargo build --release & .\\target\\release\\draw-curve.exe morton -d 3 -o \"morton.gif\" -r 15 -pf"
 			},
-			"options": {
-				"cwd": ".\\draw-curve",
-			},
 			"presentation": {
 				"reveal": "always",
 				"clear": true
@@ -55,9 +51,6 @@
 			"args": [],
 			"windows": {
 				"command": "cargo build --release & .\\target\\release\\draw-curve.exe hilbert -d 3 -o \"hilbert.gif\" -r 15 -pf"
-			},
-			"options": {
-				"cwd": ".\\draw-curve",
 			},
 			"presentation": {
 				"reveal": "always",
