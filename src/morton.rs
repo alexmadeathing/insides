@@ -364,14 +364,14 @@ mod tests {
         )+}
     }
 
-    test_morton_curve!(morton_expand, expand, u8, 1, 2, 3, 4, 5, 6, 7, 8);
-    test_morton_curve!(morton_expand, expand, u16, 1, 2, 3, 4, 5, 6, 7, 8);
-    test_morton_curve!(morton_expand, expand, u32, 1, 2, 3, 4);
-    test_morton_curve!(morton_expand, expand, u64, 1, 2);
+    test_morton_curve!(morton_expand, expand, u8, 2, 3, 4, 5, 6, 7, 8);
+    test_morton_curve!(morton_expand, expand, u16, 2, 3, 4, 5, 6, 7, 8);
+    test_morton_curve!(morton_expand, expand, u32, 2, 3, 4);
+    test_morton_curve!(morton_expand, expand, u64, 2);
 
-    test_morton_curve!(morton_fixed, fixed, u8, 1, 2, 3, 4);
-    test_morton_curve!(morton_fixed, fixed, u16, 1, 2, 3, 4, 5, 6, 7, 8);
-    test_morton_curve!(morton_fixed, fixed, u32, 1, 2, 3, 4, 5, 6, 7, 8);
-    test_morton_curve!(morton_fixed, fixed, u64, 1, 2, 3, 4, 5, 6, 7, 8);
-    test_morton_curve!(morton_fixed, fixed, u128, 1, 2, 3, 4, 5, 6, 7, 8);
+    test_morton_curve!(morton_fixed, fixed, u8, 2, 3, 4);
+    test_morton_curve!(morton_fixed, fixed, u16, 2, 3, 4, 5, 6, 7, 8);
+    test_morton_curve!(morton_fixed, fixed, u32, 2, 3, 4, 5, 6, 7, 8);
+    test_morton_curve!(morton_fixed, fixed, u64, 2, 3, 4, 5, 6, 7, 8);
+    test_morton_curve!(morton_fixed, fixed, u128, 2, 3, 4, 5, 6, 7, 8);
 }

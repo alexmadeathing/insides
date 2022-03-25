@@ -13,6 +13,7 @@ pub trait NumTraits: dilate::DilatableType + Ord {
     fn bit_and(self, rhs: Self) -> Self;
     fn bit_or(self, rhs: Self) -> Self;
     fn bit_xor(self, rhs: Self) -> Self;
+    fn to_usize(self) -> usize;
 }
 
 macro_rules! impl_num_traits {
@@ -76,6 +77,11 @@ macro_rules! impl_num_traits {
             #[inline]
             fn bit_xor(self, rhs: Self) -> Self {
                 self ^ rhs
+            }
+
+            #[inline]
+            fn to_usize(self) -> usize {
+                self as usize
             }
         }
     )+};

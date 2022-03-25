@@ -15,7 +15,13 @@ keywords = ["morton", "hilbert", "curve", "quadtree", "octree"]
 
 [dependencies]
 dilate = "0.6.0"
+#dilate = { path = "../dilate" }
 
 [dev-dependencies]
 lazy_static = "1.4.0" # For test data
 paste = "1.0.6" # For generation of multi-dimensional, multi-type, test names
+criterion = { version = "0.3.5", features = ["html_reports"] }
+
+[[bench]]
+name = "benches"
+harness = false

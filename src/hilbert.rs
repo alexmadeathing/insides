@@ -33,13 +33,11 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 // SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use core::ops::Range;
-
 use dilate::*;
 
-use super::{Coord, Index, Encoding, Neighbours, QueryDirection, Siblings, Morton};
+use super::{Coord, Encoding, Index, Neighbours, QueryDirection, Siblings};
 
-use crate::internal::NumTraits;
+use crate::{internal::NumTraits, Morton};
 
 // Until we have complex generic constants, we have to pass D in here (needed by coords)
 // Waiting on: https://github.com/rust-lang/rust/issues/76560
@@ -57,7 +55,6 @@ where
     DM: DilationMethod,
     DM::Undilated: Coord,
     DM::Dilated: Index,
-    Morton<DM, D>: Encoding<D, Coord = DM::Undilated, Index = DM::Dilated>,
 {
     type Coord = DM::Undilated;
     type Index = DM::Dilated;
@@ -85,24 +82,37 @@ where
 
     #[inline]
     fn coords(&self) -> [Self::Coord; D] {
-//        let rotate = |i, a| {  i.shl(a) }
+        let lower_mask = Self::Index::one().shl(D).sub(Self::Index::one());
+
+        let gray = |i: Self::Index| i.bit_xor(i.shr(1));
+
+        let d = |i: usize| (i + ((i & 0x1) - 1)).trailing_ones() as usize;
+
+        // TODO Can we remove this branch?
+        let e = |i: Self::Index| {
+            if i == NumTraits::zero() {
+                NumTraits::zero()
+            } else {
+                gray(i.sub(NumTraits::one()).bit_and(Self::Index::one().bit_not()))
+            }
+        };
+
+        let rotate =
+            |i: Self::Index, a| lower_mask.bit_and(i.shl(a).bit_or(i.shr(D - a)));
+
+        let order = (Self::Index::bits() - self.0.lz() + D - 1) / D;
+        let skip_orders = DM::UNDILATED_BITS - order;
 
         let mut morton_index = Self::Index::zero();
-        let lower_mask = Self::Index::one().shl(D).sub(Self::Index::one());
-//        let num_bits = (Self::Index::bits() - self.0.ls()) / D;
-        for i in 0..DM::UNDILATED_BITS {
-            let sub_index = self.0.shr(i * D).bit_and(lower_mask);
-            let gray_index = sub_index.bit_xor(sub_index.shr(1));
-
-            let rotate_amount = i.rem_euclid(D);
-            let rotated_index = gray_index.shl(rotate_amount).bit_or(gray_index.shr(D - rotate_amount)).bit_and(lower_mask);
-
-//            (i * D) + gray_index
-
-            morton_index = morton_index.bit_or(rotated_index.shl(i * D));
-
+        let mut flip_axes = Self::Index::zero();
+        let mut rotate_amount = (skip_orders + 1) % D;
+        for i in (0..order).rev() {
+            let raw_index = self.0.shr(i * D).bit_and(lower_mask);
+            let index = flip_axes.bit_xor(rotate(gray(raw_index), rotate_amount));
+            morton_index = morton_index.bit_or(index.shl(i * D));
+            flip_axes = flip_axes.bit_xor(rotate(e(raw_index), rotate_amount));
+            rotate_amount = (d(raw_index.to_usize()) + rotate_amount + 1) % D;
         }
-
         Morton::<DM, D>::from_index(morton_index).coords()
     }
 
