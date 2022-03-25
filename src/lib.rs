@@ -77,11 +77,11 @@ pub use dilate::{Expand, Fixed};
 
 /// Morton curve implementation
 pub mod morton;
-pub use morton::Morton;
+pub use crate::morton::Morton;
 
 /// Hilbert curve implementation
 pub mod hilbert;
-pub use hilbert::Hilbert;
+pub use crate::hilbert::Hilbert;
 
 pub(crate) mod internal;
 

@@ -1,7 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
-use dilate::DilationMethod;
-use insides::{Hilbert, Expand, Encoding, Coord, Index};
+use insides::{Hilbert, Expand, Encoding};
 
 pub trait NumTraits {
     fn from_usize(value: usize) -> Self;
@@ -19,34 +18,63 @@ macro_rules! impl_num_traits {
 
 impl_num_traits!(u8, u16, u32, u64, u128);
 
-#[inline]
-fn bench_index_to_coords<E, const D: usize>()
-where
-    E: Encoding<D>,
-    E::Index: NumTraits,
-{
-    for i in 0..1000 {
-        black_box(E::from_index(black_box(E::Index::from_usize(i))).coords());
-    }
-}
-
-type HilbertD2 = Hilbert::<Expand<u8, 2>, 2>;
-type HilbertD3 = Hilbert::<Expand<u8, 3>, 3>;
-type HilbertD4 = Hilbert::<Expand<u8, 4>, 4>;
-type HilbertD5 = Hilbert::<Expand<u8, 5>, 5>;
-type HilbertD6 = Hilbert::<Expand<u8, 6>, 6>;
-type HilbertD7 = Hilbert::<Expand<u8, 7>, 7>;
-type HilbertD8 = Hilbert::<Expand<u8, 8>, 8>;
-
 pub fn criterion_benchmark(c: &mut Criterion) {
-    c.bench_function("Hilbert D2 index_to_coords", |b| b.iter(bench_index_to_coords::<HilbertD2, 2>));
-    c.bench_function("Hilbert D3 index_to_coords", |b| b.iter(bench_index_to_coords::<HilbertD3, 3>));
-    c.bench_function("Hilbert D4 index_to_coords", |b| b.iter(bench_index_to_coords::<HilbertD4, 4>));
-    c.bench_function("Hilbert D5 index_to_coords", |b| b.iter(bench_index_to_coords::<HilbertD5, 5>));
-    c.bench_function("Hilbert D6 index_to_coords", |b| b.iter(bench_index_to_coords::<HilbertD6, 6>));
-    c.bench_function("Hilbert D7 index_to_coords", |b| b.iter(bench_index_to_coords::<HilbertD7, 7>));
-    c.bench_function("Hilbert D8 index_to_coords", |b| b.iter(bench_index_to_coords::<HilbertD8, 8>));
+    let coord_bits: usize = 8;
+    let coord_length: usize = 1 << coord_bits;
+    let index_length: usize = coord_length * coord_length;
+
+    c.bench_function("insides: 2d hilbert index to coords", |b| {
+        b.iter(|| {
+            for i in 0..index_length {
+                black_box(Hilbert::<Expand<u32, 2>, 2>::from_index(black_box(i as u64)).coords());
+            }
+        })
+    });
+
+    c.bench_function("fast_hilbert: 2d hilbert index to coords", |b| {
+        b.iter(|| {
+            for i in 0..index_length {
+                black_box(fast_hilbert::h2xy::<u32>(black_box(i as u64)));
+            }
+        })
+    });
+
+    c.bench_function("hilbert_curve: 2d hilbert index to coords", |b| {
+        b.iter(|| {
+            for i in 0..index_length {
+                black_box(hilbert_curve::convert_1d_to_2d(black_box(i), black_box(coord_length)));
+            }
+        })
+    });
+
+    c.bench_function("hilbert_2d: 2d hilbert index to coords", |b| {
+        b.iter(|| {
+            for i in 0..index_length {
+                black_box(hilbert_2d::h2xy_discrete(black_box(i), black_box(coord_bits), black_box(hilbert_2d::Variant::Hilbert)));
+            }
+        })
+    });
+
+    c.bench_function("hilbert_index: 2d hilbert index to coords", |b| {
+        b.iter(|| {
+            for i in 0..index_length {
+                black_box(hilbert_index::FromHilbertIndex::<2>::from_hilbert_index(black_box(&i), black_box(coord_bits)));
+            }
+        })
+    });
+
+    c.bench_function("hilbert: 2d hilbert index to coords", |b| {
+        b.iter(|| {
+            for i in 0..index_length {
+                black_box(hilbert::Point::new_from_hilbert_index(0, &black_box(num::BigUint::from(i)), black_box(coord_bits), black_box(2)));
+            }
+        })
+    });
 }
 
-criterion_group!(benches, criterion_benchmark);
+criterion_group!(
+    name = benches;
+    config = Criterion::default().sample_size(2000);
+    targets = criterion_benchmark
+);
 criterion_main!(benches);
