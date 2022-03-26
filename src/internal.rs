@@ -1,4 +1,19 @@
 
+// Can be replaced with core::array::from_fn when stabilised
+// https://github.com/rust-lang/rust/pull/94119
+#[inline]
+pub fn array_from_fn<F, T, const N: usize>(mut cb: F) -> [T; N]
+where
+    F: FnMut(usize) -> T,
+{
+    let mut idx = 0;
+    [(); N].map(|_| {
+        let res = cb(idx);
+        idx += 1;
+        res
+    })
+}
+
 pub trait NumTraits: dilate::DilatableType + Ord {
     // Add methods as needed
     fn zero() -> Self;
@@ -13,6 +28,7 @@ pub trait NumTraits: dilate::DilatableType + Ord {
     fn bit_and(self, rhs: Self) -> Self;
     fn bit_or(self, rhs: Self) -> Self;
     fn bit_xor(self, rhs: Self) -> Self;
+    fn from_usize(value: usize) -> Self;
     fn to_usize(self) -> usize;
 }
 
@@ -77,6 +93,11 @@ macro_rules! impl_num_traits {
             #[inline]
             fn bit_xor(self, rhs: Self) -> Self {
                 self ^ rhs
+            }
+
+            #[inline]
+            fn from_usize(value: usize) -> Self {
+                value as Self
             }
 
             #[inline]

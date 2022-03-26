@@ -107,13 +107,7 @@ where
 
     #[inline]
     fn coords(&self) -> [Self::Coord; D] {
-        let mut axis = 0;
-        [(); D].map(|_| {
-            let coord =
-                { DilatedInt::<DM>::new(self.0.shr(axis).bit_and(DM::DILATED_MAX)).undilate() };
-            axis += 1;
-            coord
-        })
+        crate::internal::array_from_fn::<_, _, D>(|i| DilatedInt::<DM>::new(self.0.shr(i).bit_and(DM::DILATED_MAX)).undilate())
     }
 
     #[inline]

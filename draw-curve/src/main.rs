@@ -91,7 +91,8 @@ fn draw_curve<T, B>(backend: &mut B, args: &Args) where T: Encoding<2, Coord = u
             let t = i as f32 / curve_len as f32;
             line_col = lerp_colour(args.cola, args.colb, t).into();
         }
-        let b = cell_center(T::from_index(i as u32).coords());
+        let coords = T::from_index(i as u32).coords();
+        let b = cell_center(coords);
         let style = ShapeStyle::from(line_col).stroke_width(line_width as u32);
         backend.draw_circle(b, blob_radius as u32, &style, true).expect("Failed to draw circle");
         if i > 0 {

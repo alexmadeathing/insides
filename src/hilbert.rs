@@ -39,6 +39,126 @@ use super::{Coord, Encoding, Index, Neighbours, QueryDirection, Siblings};
 
 use crate::{internal::NumTraits, Morton};
 
+#[cfg(feature = "lut16")]
+const GRAY_TAB: [usize; 16] = [
+    00, 01, 03, 02, 06, 07, 05, 04, 12, 13, 15, 14, 10, 11, 09, 08,
+];
+
+#[cfg(feature = "lut32")]
+const GRAY_TAB: [usize; 32] = [
+    00, 01, 03, 02, 06, 07, 05, 04, 12, 13, 15, 14, 10, 11, 09, 08,
+    24, 25, 27, 26, 30, 31, 29, 28, 20, 21, 23, 22, 18, 19, 17, 16,
+];
+
+#[cfg(feature = "lut64")]
+const GRAY_TAB: [usize; 64] = [
+    00, 01, 03, 02, 06, 07, 05, 04, 12, 13, 15, 14, 10, 11, 09, 08,
+    24, 25, 27, 26, 30, 31, 29, 28, 20, 21, 23, 22, 18, 19, 17, 16,
+    48, 49, 51, 50, 54, 55, 53, 52, 60, 61, 63, 62, 58, 59, 57, 56,
+    40, 41, 43, 42, 46, 47, 45, 44, 36, 37, 39, 38, 34, 35, 33, 32,
+];
+
+#[cfg(feature = "lut16")]
+const GRAY_INV_TAB: [usize; 16] = [
+    00, 01, 03, 02, 07, 06, 04, 05, 15, 14, 12, 13, 08, 09, 11, 10,
+];
+
+#[cfg(feature = "lut32")]
+const GRAY_INV_TAB: [usize; 32] = [
+    00, 01, 03, 02, 07, 06, 04, 05, 15, 14, 12, 13, 08, 09, 11, 10,
+    31, 30, 28, 29, 24, 25, 27, 26, 16, 17, 19, 18, 23, 22, 20, 21,
+];
+
+#[cfg(feature = "lut64")]
+const GRAY_INV_TAB: [usize; 64] = [
+    00, 01, 03, 02, 07, 06, 04, 05, 15, 14, 12, 13, 08, 09, 11, 10,
+    31, 30, 28, 29, 24, 25, 27, 26, 16, 17, 19, 18, 23, 22, 20, 21,
+    63, 62, 60, 61, 56, 57, 59, 58, 48, 49, 51, 50, 55, 54, 52, 53,
+    32, 33, 35, 34, 39, 38, 36, 37, 47, 46, 44, 45, 40, 41, 43, 42,
+];
+
+#[cfg(feature = "lut16")]
+const ROTATION_TRANSFORM_TAB: [usize; 16] = [
+    0, 1, 1, 2, 2, 1, 1, 3, 3, 1, 1, 2, 2, 1, 1, 4,
+];
+
+#[cfg(feature = "lut32")]
+const ROTATION_TRANSFORM_TAB: [usize; 32] = [
+    0, 1, 1, 2, 2, 1, 1, 3, 3, 1, 1, 2, 2, 1, 1, 4,
+    4, 1, 1, 2, 2, 1, 1, 3, 3, 1, 1, 2, 2, 1, 1, 5,
+];
+
+#[cfg(feature = "lut64")]
+const ROTATION_TRANSFORM_TAB: [usize; 64] = [
+    0, 1, 1, 2, 2, 1, 1, 3, 3, 1, 1, 2, 2, 1, 1, 4,
+    4, 1, 1, 2, 2, 1, 1, 3, 3, 1, 1, 2, 2, 1, 1, 5,
+    5, 1, 1, 2, 2, 1, 1, 3, 3, 1, 1, 2, 2, 1, 1, 4,
+    4, 1, 1, 2, 2, 1, 1, 3, 3, 1, 1, 2, 2, 1, 1, 6,
+];
+
+#[cfg(feature = "lut16")]
+const AXIS_TRANSFORM_TAB: [usize; 16] = [
+    00, 00, 00, 03, 03, 06, 06, 05, 05, 12, 12, 15, 15, 10, 10, 09,
+];
+
+#[cfg(feature = "lut32")]
+const AXIS_TRANSFORM_TAB: [usize; 32] = [
+    00, 00, 00, 03, 03, 06, 06, 05, 05, 12, 12, 15, 15, 10, 10, 09,
+    09, 24, 24, 27, 27, 30, 30, 29, 29, 20, 20, 23, 23, 18, 18, 17,
+];
+
+#[cfg(feature = "lut64")]
+const AXIS_TRANSFORM_TAB: [usize; 64] = [
+    00, 00, 00, 03, 03, 06, 06, 05, 05, 12, 12, 15, 15, 10, 10, 09,
+    09, 24, 24, 27, 27, 30, 30, 29, 29, 20, 20, 23, 23, 18, 18, 17,
+    17, 48, 48, 51, 51, 54, 54, 53, 53, 60, 60, 63, 63, 58, 58, 57,
+    57, 40, 40, 43, 43, 46, 46, 45, 45, 36, 36, 39, 39, 34, 34, 33,
+];
+
+#[inline]
+fn gray<T>(i: T) -> T where T: NumTraits {
+    #[cfg(any(feature = "lut16", feature = "lut32", feature = "lut64"))]
+    if i < NumTraits::from_usize(GRAY_TAB.len()) {
+        return NumTraits::from_usize(GRAY_TAB[i.to_usize()]);
+    }
+    i.bit_xor(i.shr(NumTraits::one()))
+}
+
+#[inline]
+fn gray_inverse<T, const D: usize>(i: T) -> T where T: NumTraits {
+    #[cfg(any(feature = "lut16", feature = "lut32", feature = "lut64"))]
+    if i < NumTraits::from_usize(GRAY_INV_TAB.len()) {
+        return NumTraits::from_usize(GRAY_INV_TAB[i.to_usize()]);
+    }
+    (1..D).fold(i, |acc, shift| acc.bit_xor(i.shr(shift)))
+}
+
+#[inline]
+fn rotation_transform(i: usize) -> usize {
+    #[cfg(any(feature = "lut16", feature = "lut32", feature = "lut64"))]
+    if i < ROTATION_TRANSFORM_TAB.len() {
+        return ROTATION_TRANSFORM_TAB[i];
+    }
+    if i > 0 {
+        (i + ((i & 0x1) - 1)).trailing_ones() as usize
+    } else {
+        0
+    }
+}
+
+#[inline]
+fn axis_transform<T>(i: T) -> T where T: NumTraits {
+    #[cfg(any(feature = "lut16", feature = "lut32", feature = "lut64"))]
+    if i < NumTraits::from_usize(AXIS_TRANSFORM_TAB.len()) {
+        return NumTraits::from_usize(AXIS_TRANSFORM_TAB[i.to_usize()]);
+    }
+    if i == NumTraits::zero() {
+        NumTraits::zero()
+    } else {
+        gray(NumTraits::bit_and(i.sub(NumTraits::one()), NumTraits::bit_not(NumTraits::one())))
+    }
+}
+
 // Until we have complex generic constants, we have to pass D in here (needed by coords)
 // Waiting on: https://github.com/rust-lang/rust/issues/76560
 #[derive(Clone, Copy, Default, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -72,30 +192,32 @@ where
 
     #[inline]
     fn from_coords(coords: [Self::Coord; D]) -> Self {
-        debug_assert!(
-            *coords.iter().max().unwrap() <= Self::COORD_MAX,
-            "Parameter 'coords' contains a value which exceeds maximum"
-        );
+        let morton_index = Morton::<DM, D>::from_coords(coords).index();
 
-        todo!();
+        let lower_mask = Self::Index::one().shl(D).sub(Self::Index::one());
+
+        let rotate =
+            |i: Self::Index, a| lower_mask.bit_and(i.shr(a).bit_or(i.shl(D - a)));
+
+        let order = (Self::Index::bits() - morton_index.lz() + D - 1) / D;
+        let skip_orders = DM::UNDILATED_BITS - order;
+
+        let mut hilbert_index = Self::Index::zero();
+        let mut flip_axes = Self::Index::zero();
+        let mut rotate_amount = (skip_orders + 1) % D;
+        for i in (0..order).rev() {
+            let morton_partial = morton_index.shr(i * D).bit_and(lower_mask);
+            let raw_index = gray_inverse::<_, D>(rotate(flip_axes.bit_xor(morton_partial), rotate_amount));
+            hilbert_index = hilbert_index.bit_or(raw_index.shl(i * D));
+            flip_axes = flip_axes.bit_xor(rotate(axis_transform(raw_index), rotate_amount));
+            rotate_amount = (rotation_transform(raw_index.to_usize()) + rotate_amount + 1) % D;
+        }
+        Self(hilbert_index)
     }
 
     #[inline]
     fn coords(&self) -> [Self::Coord; D] {
         let lower_mask = Self::Index::one().shl(D).sub(Self::Index::one());
-
-        let gray = |i: Self::Index| i.bit_xor(i.shr(1));
-
-        let d = |i: usize| (i + ((i & 0x1) - 1)).trailing_ones() as usize;
-
-        // TODO Can we remove this branch?
-        let e = |i: Self::Index| {
-            if i == NumTraits::zero() {
-                NumTraits::zero()
-            } else {
-                gray(i.sub(NumTraits::one()).bit_and(Self::Index::one().bit_not()))
-            }
-        };
 
         let rotate =
             |i: Self::Index, a| lower_mask.bit_and(i.shl(a).bit_or(i.shr(D - a)));
@@ -108,10 +230,10 @@ where
         let mut rotate_amount = (skip_orders + 1) % D;
         for i in (0..order).rev() {
             let raw_index = self.0.shr(i * D).bit_and(lower_mask);
-            let index = flip_axes.bit_xor(rotate(gray(raw_index), rotate_amount));
-            morton_index = morton_index.bit_or(index.shl(i * D));
-            flip_axes = flip_axes.bit_xor(rotate(e(raw_index), rotate_amount));
-            rotate_amount = (d(raw_index.to_usize()) + rotate_amount + 1) % D;
+            let morton_partial = flip_axes.bit_xor(rotate(gray(raw_index), rotate_amount));
+            morton_index = morton_index.bit_or(morton_partial.shl(i * D));
+            flip_axes = flip_axes.bit_xor(rotate(axis_transform(raw_index), rotate_amount));
+            rotate_amount = (rotation_transform(raw_index.to_usize()) + rotate_amount + 1) % D;
         }
         Morton::<DM, D>::from_index(morton_index).coords()
     }

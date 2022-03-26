@@ -70,6 +70,66 @@ pub fn criterion_benchmark(c: &mut Criterion) {
             }
         })
     });
+
+    c.bench_function("insides: 2d hilbert coords to index", |b| {
+        b.iter(|| {
+            for x in 0..coord_length {
+                for y in 0..coord_length {
+                    black_box(Hilbert::<Expand<u32, 2>, 2>::from_coords(black_box([x as u32, y as u32])).index());
+                }
+            }
+        })
+    });
+
+    c.bench_function("fast_hilbert: 2d hilbert coords to index", |b| {
+        b.iter(|| {
+            for x in 0..coord_length {
+                for y in 0..coord_length {
+                    black_box(fast_hilbert::xy2h::<u32>(black_box(x as u32), black_box(y as u32)));
+                }
+            }
+        })
+    });
+
+    c.bench_function("hilbert_curve: 2d hilbert coords to index", |b| {
+        b.iter(|| {
+            for x in 0..coord_length {
+                for y in 0..coord_length {
+                    black_box(hilbert_curve::convert_2d_to_1d(black_box(x), black_box(y), black_box(coord_length)));
+                }
+            }
+        })
+    });
+
+    c.bench_function("hilbert_2d: 2d hilbert coords to index", |b| {
+        b.iter(|| {
+            for x in 0..coord_length {
+                for y in 0..coord_length {
+                    black_box(hilbert_2d::xy2h_discrete(black_box(x), black_box(y), black_box(coord_bits), black_box(hilbert_2d::Variant::Hilbert)));
+                }
+            }
+        })
+    });
+
+    c.bench_function("hilbert_index: 2d hilbert coords to index", |b| {
+        b.iter(|| {
+            for x in 0..coord_length {
+                for y in 0..coord_length {
+                    black_box(hilbert_index::ToHilbertIndex::to_hilbert_index(&black_box([x, y]), black_box(coord_bits)));
+                }
+            }
+        })
+    });
+
+    c.bench_function("hilbert: 2d hilbert coords to index", |b| {
+        b.iter(|| {
+            for x in 0..coord_length {
+                for y in 0..coord_length {
+                    black_box(black_box(hilbert::Point::new(0, &[x as u32, y as u32])).hilbert_transform(black_box(coord_bits)));
+                }
+            }
+        })
+    });
 }
 
 criterion_group!(
