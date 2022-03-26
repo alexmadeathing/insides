@@ -118,7 +118,7 @@ pub enum QueryDirection {
 /// Provides conversion to and from coordinates
 // I'd really love to get rid of the generic parameter here but I think it's waiting on:
 // https://github.com/rust-lang/rust/issues/76560
-pub trait Encoding<const D: usize> {
+pub trait SpaceFillingCurve<const D: usize> {
     /// Coordinate type
     type Coord: Coord;
 
@@ -130,6 +130,9 @@ pub trait Encoding<const D: usize> {
 
     /// Maximum value for an encoded index
     const INDEX_MAX: Self::Index;
+
+    /// Number of dimensions
+    const D: usize;
 
     /// Create a new location from a pre-encoded curve index
     /// 
@@ -159,7 +162,7 @@ pub trait Encoding<const D: usize> {
     /// [Neighbours].
     /// 
     /// # Panics
-    /// Panics if coordinate is greater than [Encoding::COORD_MAX].
+    /// Panics if coordinate is greater than [SpaceFillingCurve::COORD_MAX].
     /// 
     /// # Examples
     /// ```rust
@@ -204,7 +207,7 @@ pub trait Encoding<const D: usize> {
 }
 
 /// Provides methods for retrieving adacent locations within a cluster
-pub trait Siblings<const D: usize>: Encoding<D> {
+pub trait Siblings<const D: usize>: SpaceFillingCurve<D> {
     /// Get sibling location on axis within local cluster
     /// 
     /// The sibling is considered to be within the local cluster this location
@@ -256,7 +259,7 @@ pub trait Siblings<const D: usize>: Encoding<D> {
 }
 
 /// Provides methods for retrieving adacent locations
-pub trait Neighbours<const D: usize>: Encoding<D> {
+pub trait Neighbours<const D: usize>: SpaceFillingCurve<D> {
     /// Get neighbour location on axis
     /// 
     /// This method gets the neighbour location in a direction along on an axis.

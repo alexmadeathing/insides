@@ -35,7 +35,7 @@
 
 use dilate::*;
 
-use super::{Coord, Index, Encoding, Neighbours, QueryDirection, Siblings};
+use super::{Coord, Index, SpaceFillingCurve, Neighbours, QueryDirection, Siblings};
 
 use crate::internal::NumTraits;
 
@@ -64,14 +64,14 @@ use crate::internal::NumTraits;
 // Until we have complex generic constants, we have to pass D in here (needed by coords)
 // Waiting on: https://github.com/rust-lang/rust/issues/76560
 #[derive(Clone, Copy, Default, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Morton<DM, const D: usize>(DM::Dilated)
+pub struct Morton<DM, const D: usize>(pub(crate) DM::Dilated)
 where
     // When https://github.com/rust-lang/rust/issues/52662 is available, we can clean this up
     DM: DilationMethod,
     DM::Undilated: Coord,
     DM::Dilated: Index;
 
-impl<DM, const D: usize> Encoding<D> for Morton<DM, D>
+impl<DM, const D: usize> SpaceFillingCurve<D> for Morton<DM, D>
 where
     // When https://github.com/rust-lang/rust/issues/52662 is available, we can clean this up
     DM: DilationMethod,
@@ -82,6 +82,7 @@ where
     type Index = DM::Dilated;
     const COORD_MAX: Self::Coord = DM::UNDILATED_MAX;
     const INDEX_MAX: Self::Index = DM::DILATED_MASK;
+    const D: usize = D;
 
     #[inline]
     fn from_index(index: Self::Index) -> Self {
@@ -186,7 +187,7 @@ mod tests {
     macro_rules! test_morton_curve {
         ($name:path, $dm_macro:ty, $t:ty, $($d:literal),+) => {$(
             paste::paste!{
-                mod [< $name _ $t _d $d >] {
+                mod [< $name _ $dm_macro _ $t _d $d >] {
                     use super::*;
                     use super::super::*;
 
@@ -341,13 +342,13 @@ mod tests {
                             for axis in 0..$d {
                                 // Negative search direction
                                 let mut nei_coords = coords;
-                                nei_coords[axis] = nei_coords[axis].wrapping_sub(1) & <TestedCurve as Encoding<$d>>::COORD_MAX;
+                                nei_coords[axis] = nei_coords[axis].wrapping_sub(1) & <TestedCurve as SpaceFillingCurve<$d>>::COORD_MAX;
                                 let expect_index = coords_to_index(nei_coords);
                                 assert_eq!(Morton::<$dm_macro!($t, $d), $d>(index).neighbour_on_axis(axis, QueryDirection::Negative).0, expect_index);
 
                                 // Positive search direction
                                 let mut nei_coords = coords;
-                                nei_coords[axis] = nei_coords[axis].wrapping_add(1) & <TestedCurve as Encoding<$d>>::COORD_MAX;
+                                nei_coords[axis] = nei_coords[axis].wrapping_add(1) & <TestedCurve as SpaceFillingCurve<$d>>::COORD_MAX;
                                 let expect_index = coords_to_index(nei_coords);
                                 assert_eq!(Morton::<$dm_macro!($t, $d), $d>(index).neighbour_on_axis(axis, QueryDirection::Positive).0, expect_index);
                             }
@@ -358,14 +359,39 @@ mod tests {
         )+}
     }
 
-    test_morton_curve!(morton_expand, expand, u8, 2, 3, 4, 5, 6, 7, 8);
-    test_morton_curve!(morton_expand, expand, u16, 2, 3, 4, 5, 6, 7, 8);
-    test_morton_curve!(morton_expand, expand, u32, 2, 3, 4);
-    test_morton_curve!(morton_expand, expand, u64, 2);
+    use crate::internal::tests::test_curve;
 
-    test_morton_curve!(morton_fixed, fixed, u8, 2, 3, 4);
-    test_morton_curve!(morton_fixed, fixed, u16, 2, 3, 4, 5, 6, 7, 8);
-    test_morton_curve!(morton_fixed, fixed, u32, 2, 3, 4, 5, 6, 7, 8);
-    test_morton_curve!(morton_fixed, fixed, u64, 2, 3, 4, 5, 6, 7, 8);
-    test_morton_curve!(morton_fixed, fixed, u128, 2, 3, 4, 5, 6, 7, 8);
+    macro_rules! morton_expand {
+        ($t:ty, $d:literal) => {
+            Morton::<Expand<$t, $d>, $d>
+        };
+    }
+
+    macro_rules! morton_fixed {
+        ($t:ty, $d:literal) => {
+            Morton::<Fixed<$t, $d>, $d>
+        };
+    }
+
+    test_curve!(morton_expand, false, u8, 2, 3, 4, 5, 6, 7, 8);
+    test_curve!(morton_expand, false, u16, 2, 3, 4, 5, 6, 7, 8);
+    test_curve!(morton_expand, false, u32, 2, 3, 4);
+    test_curve!(morton_expand, false, u64, 2);
+
+    test_curve!(morton_fixed, false, u8, 2, 3, 4);
+    test_curve!(morton_fixed, false, u16, 2, 3, 4, 5, 6, 7, 8);
+    test_curve!(morton_fixed, false, u32, 2, 3, 4, 5, 6, 7, 8);
+    test_curve!(morton_fixed, false, u64, 2, 3, 4, 5, 6, 7, 8);
+    test_curve!(morton_fixed, false, u128, 2, 3, 4, 5, 6, 7, 8);
+
+//    test_morton_curve!(morton_expand, expand, u8, 2, 3, 4, 5, 6, 7, 8);
+//    test_morton_curve!(morton_expand, expand, u16, 2, 3, 4, 5, 6, 7, 8);
+//    test_morton_curve!(morton_expand, expand, u32, 2, 3, 4);
+//    test_morton_curve!(morton_expand, expand, u64, 2);
+//
+//    test_morton_curve!(morton_fixed, fixed, u8, 2, 3, 4);
+//    test_morton_curve!(morton_fixed, fixed, u16, 2, 3, 4, 5, 6, 7, 8);
+//    test_morton_curve!(morton_fixed, fixed, u32, 2, 3, 4, 5, 6, 7, 8);
+//    test_morton_curve!(morton_fixed, fixed, u64, 2, 3, 4, 5, 6, 7, 8);
+//    test_morton_curve!(morton_fixed, fixed, u128, 2, 3, 4, 5, 6, 7, 8);
 }

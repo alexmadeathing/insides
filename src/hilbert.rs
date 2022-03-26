@@ -35,7 +35,7 @@
 
 use dilate::*;
 
-use super::{Coord, Encoding, Index, Neighbours, QueryDirection, Siblings};
+use super::{Coord, SpaceFillingCurve, Index, Neighbours, QueryDirection, Siblings};
 
 use crate::{internal::NumTraits, Morton};
 
@@ -140,7 +140,7 @@ fn rotation_transform(i: usize) -> usize {
         return ROTATION_TRANSFORM_TAB[i];
     }
     if i > 0 {
-        (i + ((i & 0x1) - 1)).trailing_ones() as usize
+        i.wrapping_add((i & 0x1).wrapping_sub(1)).trailing_ones() as usize
     } else {
         0
     }
@@ -162,14 +162,14 @@ fn axis_transform<T>(i: T) -> T where T: NumTraits {
 // Until we have complex generic constants, we have to pass D in here (needed by coords)
 // Waiting on: https://github.com/rust-lang/rust/issues/76560
 #[derive(Clone, Copy, Default, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Hilbert<DM, const D: usize>(DM::Dilated)
+pub struct Hilbert<DM, const D: usize>(pub(crate) DM::Dilated)
 where
     // When https://github.com/rust-lang/rust/issues/52662 is available, we can clean this up
     DM: DilationMethod,
     DM::Undilated: Coord,
     DM::Dilated: Index;
 
-impl<DM, const D: usize> Encoding<D> for Hilbert<DM, D>
+impl<DM, const D: usize> SpaceFillingCurve<D> for Hilbert<DM, D>
 where
     // When https://github.com/rust-lang/rust/issues/52662 is available, we can clean this up
     DM: DilationMethod,
@@ -180,6 +180,7 @@ where
     type Index = DM::Dilated;
     const COORD_MAX: Self::Coord = DM::UNDILATED_MAX;
     const INDEX_MAX: Self::Index = DM::DILATED_MASK;
+    const D: usize = D;
 
     #[inline]
     fn from_index(index: Self::Index) -> Self {
@@ -209,6 +210,7 @@ where
             let morton_partial = morton_index.shr(i * D).bit_and(lower_mask);
             let raw_index = gray_inverse::<_, D>(rotate(flip_axes.bit_xor(morton_partial), rotate_amount));
             hilbert_index = hilbert_index.bit_or(raw_index.shl(i * D));
+//            hilbert_index = hilbert_index.shl(D).bit_or(raw_index);
             flip_axes = flip_axes.bit_xor(rotate(axis_transform(raw_index), rotate_amount));
             rotate_amount = (rotation_transform(raw_index.to_usize()) + rotate_amount + 1) % D;
         }
@@ -242,4 +244,42 @@ where
     fn index(&self) -> Self::Index {
         self.0
     }
+}
+
+#[cfg(test)]
+mod tests {
+    extern crate std;
+
+    use crate::internal::tests::test_curve;
+
+    macro_rules! hilbert_expand {
+        ($t:ty, $d:literal) => {
+            Hilbert::<Expand<$t, $d>, $d>
+        };
+    }
+
+    macro_rules! hilbert_fixed {
+        ($t:ty, $d:literal) => {
+            Hilbert::<Fixed<$t, $d>, $d>
+        };
+    }
+
+    #[test]
+    fn test_gray() {
+        for i in 0..10000usize {
+            let g = super::gray(i);
+            assert_eq!(super::gray_inverse::<_, { usize::BITS as usize }>(g), i);
+        }
+    }
+
+    test_curve!(hilbert_expand, true, u8, 2, 3, 4, 5, 6, 7, 8);
+    test_curve!(hilbert_expand, true, u16, 2, 3, 4, 5, 6, 7, 8);
+    test_curve!(hilbert_expand, true, u32, 2, 3, 4);
+    test_curve!(hilbert_expand, true, u64, 2);
+
+    test_curve!(hilbert_fixed, true, u8, 2, 3, 4);
+    test_curve!(hilbert_fixed, true, u16, 2, 3, 4, 5, 6, 7, 8);
+    test_curve!(hilbert_fixed, true, u32, 2, 3, 4, 5, 6, 7, 8);
+    test_curve!(hilbert_fixed, true, u64, 2, 3, 4, 5, 6, 7, 8);
+    test_curve!(hilbert_fixed, true, u128, 2, 3, 4, 5, 6, 7, 8);
 }

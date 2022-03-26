@@ -1,6 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
-use insides::{Hilbert, Expand, Encoding};
+use insides::{Hilbert, Expand, SpaceFillingCurve};
 
 pub trait NumTraits {
     fn from_usize(value: usize) -> Self;
