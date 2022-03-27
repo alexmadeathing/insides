@@ -134,6 +134,16 @@ fn gray_inverse<T, const D: usize>(i: T) -> T where T: NumTraits {
 }
 
 #[inline]
+fn shl_cyclic<T, const D: usize>(i: T, a: usize, lower_mask: T) -> T where T: NumTraits {
+    NumTraits::bit_and(lower_mask, i.shl(a).bit_or(i.shr(D - a)))
+}
+
+#[inline]
+fn shr_cyclic<T, const D: usize>(i: T, a: usize, lower_mask: T) -> T where T: NumTraits {
+    NumTraits::bit_and(lower_mask, i.shr(a).bit_or(i.shl(D - a)))
+}
+
+#[inline]
 fn rotation_transform(i: usize) -> usize {
     #[cfg(any(feature = "lut16", feature = "lut32", feature = "lut64"))]
     if i < ROTATION_TRANSFORM_TAB.len() {
@@ -191,14 +201,10 @@ where
         Self(index)
     }
 
-    #[inline]
     fn from_coords(coords: [Self::Coord; D]) -> Self {
         let morton_index = Morton::<DM, D>::from_coords(coords).index();
 
         let lower_mask = Self::Index::one().shl(D).sub(Self::Index::one());
-
-        let rotate =
-            |i: Self::Index, a| lower_mask.bit_and(i.shr(a).bit_or(i.shl(D - a)));
 
         let order = (Self::Index::bits() - morton_index.lz() + D - 1) / D;
         let skip_orders = DM::UNDILATED_BITS - order;
@@ -208,21 +214,16 @@ where
         let mut rotate_amount = (skip_orders + 1) % D;
         for i in (0..order).rev() {
             let morton_partial = morton_index.shr(i * D).bit_and(lower_mask);
-            let raw_index = gray_inverse::<_, D>(rotate(flip_axes.bit_xor(morton_partial), rotate_amount));
+            let raw_index = gray_inverse::<_, D>(shr_cyclic::<_, D>(flip_axes.bit_xor(morton_partial), rotate_amount, lower_mask));
             hilbert_index = hilbert_index.bit_or(raw_index.shl(i * D));
-//            hilbert_index = hilbert_index.shl(D).bit_or(raw_index);
-            flip_axes = flip_axes.bit_xor(rotate(axis_transform(raw_index), rotate_amount));
+            flip_axes = flip_axes.bit_xor(shl_cyclic::<_, D>(axis_transform(raw_index), rotate_amount, lower_mask));
             rotate_amount = (rotation_transform(raw_index.to_usize()) + rotate_amount + 1) % D;
         }
         Self(hilbert_index)
     }
 
-    #[inline]
     fn coords(&self) -> [Self::Coord; D] {
         let lower_mask = Self::Index::one().shl(D).sub(Self::Index::one());
-
-        let rotate =
-            |i: Self::Index, a| lower_mask.bit_and(i.shl(a).bit_or(i.shr(D - a)));
 
         let order = (Self::Index::bits() - self.0.lz() + D - 1) / D;
         let skip_orders = DM::UNDILATED_BITS - order;
@@ -232,9 +233,9 @@ where
         let mut rotate_amount = (skip_orders + 1) % D;
         for i in (0..order).rev() {
             let raw_index = self.0.shr(i * D).bit_and(lower_mask);
-            let morton_partial = flip_axes.bit_xor(rotate(gray(raw_index), rotate_amount));
+            let morton_partial = flip_axes.bit_xor(shl_cyclic::<_, D>(gray(raw_index), rotate_amount, lower_mask));
             morton_index = morton_index.bit_or(morton_partial.shl(i * D));
-            flip_axes = flip_axes.bit_xor(rotate(axis_transform(raw_index), rotate_amount));
+            flip_axes = flip_axes.bit_xor(shl_cyclic::<_, D>(axis_transform(raw_index), rotate_amount, lower_mask));
             rotate_amount = (rotation_transform(raw_index.to_usize()) + rotate_amount + 1) % D;
         }
         Morton::<DM, D>::from_index(morton_index).coords()

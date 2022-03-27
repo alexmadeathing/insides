@@ -359,7 +359,7 @@ mod tests {
         )+}
     }
 
-    use crate::internal::tests::test_curve;
+    use crate::internal::tests::{test_curve, test_curve_siblings};
 
     macro_rules! morton_expand {
         ($t:ty, $d:literal) => {
@@ -383,6 +383,17 @@ mod tests {
     test_curve!(morton_fixed, false, u32, 2, 3, 4, 5, 6, 7, 8);
     test_curve!(morton_fixed, false, u64, 2, 3, 4, 5, 6, 7, 8);
     test_curve!(morton_fixed, false, u128, 2, 3, 4, 5, 6, 7, 8);
+
+    test_curve_siblings!(morton_expand, false, u8, 2, 3, 4, 5, 6, 7, 8);
+    test_curve_siblings!(morton_expand, false, u16, 2, 3, 4, 5, 6, 7, 8);
+    test_curve_siblings!(morton_expand, false, u32, 2, 3, 4);
+    test_curve_siblings!(morton_expand, false, u64, 2);
+
+    test_curve_siblings!(morton_fixed, false, u8, 2, 3, 4);
+    test_curve_siblings!(morton_fixed, false, u16, 2, 3, 4, 5, 6, 7, 8);
+    test_curve_siblings!(morton_fixed, false, u32, 2, 3, 4, 5, 6, 7, 8);
+    test_curve_siblings!(morton_fixed, false, u64, 2, 3, 4, 5, 6, 7, 8);
+    test_curve_siblings!(morton_fixed, false, u128, 2, 3, 4, 5, 6, 7, 8);
 
 //    test_morton_curve!(morton_expand, expand, u8, 2, 3, 4, 5, 6, 7, 8);
 //    test_morton_curve!(morton_expand, expand, u16, 2, 3, 4, 5, 6, 7, 8);

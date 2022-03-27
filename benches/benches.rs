@@ -55,13 +55,15 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         })
     });
 
-    c.bench_function("hilbert_index: 2d hilbert index to coords", |b| {
+    // This is causing issues with rust-analyser
+    // It can be uncommented when performing benchmarks, but should be commented otherwise
+/*    c.bench_function("hilbert_index: 2d hilbert index to coords", |b| {
         b.iter(|| {
             for i in 0..index_length {
                 black_box(hilbert_index::FromHilbertIndex::<2>::from_hilbert_index(black_box(&i), black_box(coord_bits)));
             }
         })
-    });
+    });*/
 
     c.bench_function("hilbert: 2d hilbert index to coords", |b| {
         b.iter(|| {
@@ -134,7 +136,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
 criterion_group!(
     name = benches;
-    config = Criterion::default().sample_size(2000);
+    config = Criterion::default().sample_size(1000);
     targets = criterion_benchmark
 );
 criterion_main!(benches);

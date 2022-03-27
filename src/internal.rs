@@ -1,4 +1,3 @@
-
 // Can be replaced with core::array::from_fn when stabilised
 // https://github.com/rust-lang/rust/pull/94119
 #[inline]
@@ -135,15 +134,19 @@ impl_num_traits!(u8, u16, u32, u64, u128, usize);
 pub(crate) mod tests {
     extern crate std;
 
-    use core::{panic::RefUnwindSafe, hash::Hash};
-    use std::{println, print};
-    use std::{marker::PhantomData, fmt::Debug, panic::catch_unwind, collections::HashSet};
-    use crate::SpaceFillingCurve;
     use crate::internal::NumTraits;
+    use crate::{Siblings, SpaceFillingCurve};
+    use core::{hash::Hash, panic::RefUnwindSafe};
+    use std::{collections::HashSet, fmt::Debug, marker::PhantomData, panic::catch_unwind};
 
-    pub struct SpaceFillingCurveTester<SFC, const D: usize>(PhantomData<SFC>) where SFC: SpaceFillingCurve<D>;
+    pub struct SpaceFillingCurveTester<SFC, const D: usize>(PhantomData<SFC>)
+    where
+        SFC: SpaceFillingCurve<D>;
 
-    impl<SFC, const D: usize> SpaceFillingCurveTester<SFC, D> where SFC: SpaceFillingCurve<D> {
+    impl<SFC, const D: usize> SpaceFillingCurveTester<SFC, D>
+    where
+        SFC: SpaceFillingCurve<D>,
+    {
         pub fn from_index_too_large_panics() {
             if SFC::INDEX_MAX != NumTraits::max_value() {
                 SFC::from_index(SFC::INDEX_MAX.add(NumTraits::one()));
@@ -152,13 +155,25 @@ pub(crate) mod tests {
             }
         }
 
-        pub fn from_index_stores_unmodified_index() where <SFC as SpaceFillingCurve<D>>::Index: Debug {
-            assert_eq!(SFC::from_index(SFC::Index::zero()).index(), SFC::Index::zero());
-            assert_eq!(SFC::from_index(SFC::Index::from_usize(0b10101)).index(), SFC::Index::from_usize(0b10101));
+        pub fn from_index_stores_unmodified_index()
+        where
+            <SFC as SpaceFillingCurve<D>>::Index: Debug,
+        {
+            assert_eq!(
+                SFC::from_index(SFC::Index::zero()).index(),
+                SFC::Index::zero()
+            );
+            assert_eq!(
+                SFC::from_index(SFC::Index::from_usize(0b10101)).index(),
+                SFC::Index::from_usize(0b10101)
+            );
             assert_eq!(SFC::from_index(SFC::INDEX_MAX).index(), SFC::INDEX_MAX);
         }
 
-        pub fn from_coords_too_large_panics() where <SFC as SpaceFillingCurve<D>>::Coord: RefUnwindSafe {
+        pub fn from_coords_too_large_panics()
+        where
+            <SFC as SpaceFillingCurve<D>>::Coord: RefUnwindSafe,
+        {
             // Expand dilation methods don't have a max and won't panic
             if SFC::COORD_MAX != NumTraits::max_value() {
                 for i in 0..D {
@@ -174,15 +189,15 @@ pub(crate) mod tests {
             }
         }
 
-        pub fn from_and_to_coords_are_correct(require_adjacent: bool) where <SFC as SpaceFillingCurve<D>>::Coord: Hash + Debug {
+        pub fn from_and_to_coords_are_correct(require_adjacent: bool)
+        where
+            <SFC as SpaceFillingCurve<D>>::Coord: Hash + Debug,
+        {
             let max_num_indices = 100000;
             let num_indices: usize = SFC::INDEX_MAX.to_usize().min(max_num_indices);
 
             let mut coord_visit = HashSet::new();
-
             let mut prev_coords: Option<[SFC::Coord; D]> = None;
-
-            let mut path = std::vec::Vec::new();
 
             for i in 0..num_indices {
                 // Transform index to coords
@@ -195,21 +210,41 @@ pub(crate) mod tests {
                 // Optionally compare distance_sqr to previous coord (should always be 1)
                 if require_adjacent {
                     if let Some(prev_coords) = prev_coords {
-                        let distance_sqr = coords.iter().zip(prev_coords.iter()).fold(0, |sum, (&a, &b)| sum.add(b.distance_sqr(a)));
+                        let distance_sqr = coords
+                            .iter()
+                            .zip(prev_coords.iter())
+                            .fold(0, |sum, (&a, &b)| sum.add(b.distance_sqr(a)));
                         assert_eq!(distance_sqr, 1);
                     }
                     prev_coords = Some(coords);
                 }
-                
+
                 // Transform coords to index (should be the original index)
-                path.push(coords);
-                if SFC::from_coords(coords).index().to_usize() != i {
-//                    for c in path.iter() {
-//                        print!(" -> {:?}", *c);
-//                    }
-                    println!("\nFailed on Index: {:?}, Coords: {:?}", i, coords);
-                }
                 assert_eq!(SFC::from_coords(coords).index().to_usize(), i);
+            }
+        }
+
+        pub fn sibling_on_axis_is_correct()
+        where
+            SFC: Siblings<D>,
+            <SFC as SpaceFillingCurve<D>>::Coord: Debug,
+        {
+            let max_num_indices = 100000;
+            let num_indices: usize = SFC::INDEX_MAX.to_usize().min(max_num_indices);
+            for i in 0..num_indices {
+                // It's a shame that we have to rely on other SFC methods to test this trait... not sure of a better solution yet
+                let sfc = SFC::from_index(NumTraits::from_usize(i));
+                let coords = sfc.coords();
+                for axis in 0..D {
+                    let mut sib_coords = coords;
+                    sib_coords[axis] =
+                        if sib_coords[axis].bit_and(NumTraits::one()) == NumTraits::zero() {
+                            sib_coords[axis].add(NumTraits::one())
+                        } else {
+                            sib_coords[axis].sub(NumTraits::one())
+                        };
+                    assert_eq!(sfc.sibling_on_axis(axis).coords(), sib_coords);
+                }
             }
         }
     }
@@ -243,37 +278,24 @@ pub(crate) mod tests {
                     #[test]
                     fn from_and_to_coords_are_correct() {
                         SpaceFillingCurveTester::<TestedCurve, $d>::from_and_to_coords_are_correct($require_adjacent);
-//                        for (coords, index) in generate_coords_test_cases(64) {
-//                            std::println!("Test case: coords = {:?}, index = 0b{:b}", coords, index);
-//                            std::println!("Result: 0b{:b}", TestedCurve::from_coords(coords).0);
-//                            assert_eq!(TestedCurve::from_coords(coords).0, index);
-//                        }
                     }
+                }
+            }
+        )+}
+    }
+    pub(crate) use test_curve;
 
-                    #[test]
-                    fn encoding_coords_is_correct() {
-//                        for (coords, index) in generate_coords_test_cases(64) {
-//                            std::println!("Test case: coords = {:?}, index = 0b{:b}", coords, index);
-//                            std::println!("Result: {:?}", Morton::<$dm_macro!($t, $d), $d>(index).coords());
-//
-//                            // Aww why can't I init the type alias as a tuple struct would?
-//                            assert_eq!(Morton::<$dm_macro!($t, $d), $d>(index).coords(), coords);
-//                        }
-                    }
+    macro_rules! test_curve_siblings {
+        ($curve:path, $require_adjacent:literal, $t:ty, $($d:literal),+) => {$(
+            paste::paste!{
+                mod [< $curve _siblings_ $t _d $d >] {
+                    use super::super::*;
+                    use crate::internal::tests::SpaceFillingCurveTester;
 
+                    type TestedCurve = $curve!($t, $d);
                     #[test]
                     fn sibling_on_axis_is_correct() {
-//                        for (coords, index) in generate_coords_test_cases(64) {
-//                            for axis in 0..$d {
-//                                let mut coords = coords;
-//
-//                                // The sibling in this axis is either 1 above or 1 below the current coord
-//                                coords[axis] = if coords[axis] % 2 == 0 { coords[axis] + 1 } else { coords[axis] - 1 };
-//                                let expect_index = coords_to_index(coords);
-//
-//                                assert_eq!(Morton::<$dm_macro!($t, $d), $d>(index).sibling_on_axis(axis).0, expect_index);
-//                            }
-//                        }
+                        SpaceFillingCurveTester::<TestedCurve, $d>::sibling_on_axis_is_correct();
                     }
 
                     #[test]
@@ -317,6 +339,5 @@ pub(crate) mod tests {
             }
         )+}
     }
-    use num::integer::Roots;
-    pub(crate) use test_curve;
+    pub(crate) use test_curve_siblings;
 }
