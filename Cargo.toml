@@ -14,10 +14,11 @@ keywords = ["morton", "hilbert", "curve", "quadtree", "octree"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-#default = ["lut64"]
-lut16 = []
-lut32 = []
-lut64 = []
+#default = ["dynamic_lut"]
+tiny_lut = []
+small_lut = []
+dynamic_lut = ["small_lut"]
+static_lut = ["small_lut"]
 
 [dependencies]
 dilate = "0.6.0"

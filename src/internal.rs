@@ -27,6 +27,7 @@ pub trait NumTraits: dilate::DilatableType + Ord {
     fn bit_and(self, rhs: Self) -> Self;
     fn bit_or(self, rhs: Self) -> Self;
     fn bit_xor(self, rhs: Self) -> Self;
+    fn from_u8(value: u8) -> Self;
     fn from_usize(value: usize) -> Self;
     fn to_usize(self) -> usize;
 
@@ -98,6 +99,11 @@ macro_rules! impl_num_traits {
             #[inline]
             fn bit_xor(self, rhs: Self) -> Self {
                 self ^ rhs
+            }
+
+            #[inline]
+            fn from_u8(value: u8) -> Self {
+                value as Self
             }
 
             #[inline]
@@ -243,6 +249,9 @@ pub(crate) mod tests {
                         } else {
                             sib_coords[axis].sub(NumTraits::one())
                         };
+                    if sfc.sibling_on_axis(axis).coords() != sib_coords {
+                        //std::println!("{:?}", );
+                    }
                     assert_eq!(sfc.sibling_on_axis(axis).coords(), sib_coords);
                 }
             }
