@@ -73,7 +73,7 @@
 //! ```
 
 #[doc(hidden)]
-pub use dilate::{Expand, Fixed};
+pub use dilate::*;
 
 /// Morton curve implementation
 pub mod morton;
