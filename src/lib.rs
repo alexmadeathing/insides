@@ -76,9 +76,9 @@
 pub mod morton;
 
 #[doc(hidden)]
-pub use dilate::{Expand, Fixed};
+pub use dilate::*;
 
-pub use morton::Morton;
+pub use morton::{Morton, MortonIndex, MortonCoord};
 
 /// Direction to search within an axis when making queries
 #[derive(Clone, Copy, Debug)]
