@@ -26,7 +26,7 @@ other curve implementations, such as Hilbert - and we have plans to include them
 * Type safe - Multiple input types with known output types (supports `u8`, `u16`, `u32`, `u64`, `u128`, `usize`)
 * `no_std` - Suitable for embedded devices (additional standard library features can be enabled via the `std` feature)
 * Extensible - Flexible trait based implementation
-* Minimal dependencies - Depends only on [dilate](https://github.com/alexmadeathing/dilate) for integer dilation
+* Minimal dependencies - Release build depends only on [dilate](https://github.com/alexmadeathing/dilate) for integer dilation
 
 # Getting Started
 First, link insides into your project's cargo.toml.
