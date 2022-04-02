@@ -33,8 +33,6 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 // SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-use std::{char::MAX, panic};
-
 use dilate::*;
 
 use super::{Coord, SpaceFillingCurve, Index, Neighbours, QueryDirection, Siblings};
@@ -595,7 +593,7 @@ where
         // number of iterations in the following loop. Note that skipping iterations
         // still requires us to rotate the pattern as if we had iterated all orders, see
         // rotate_amount below.
-        let order = (DM::Dilated::bits() - index.lz() + D - 1) / D;
+        let order = ((DM::Dilated::bits() + D - 1) - index.lz()) / D;
 
         // We iterate in reverse because higher orders affect the rotation of lower orders
         let mut transform = order % D;
@@ -609,6 +607,7 @@ where
         for shift in (min_order..order).rev().map(|i| i * D) {
             let index_partial = index.shr(shift).bit_and(lower_mask);
             let hilbert_partial = f(transform, index_partial, shift);
+//            transform = transform ^ hilbert_partial.to_usize();
             transform = match D {
                 2 => static_lut::TRANSFORM_LUT_D2[transform][hilbert_partial.to_usize()],
                 3 => static_lut::TRANSFORM_LUT_D3[transform][hilbert_partial.to_usize()],
@@ -648,23 +647,75 @@ where
         (rotate_amount, flip_axes)
     }
 
-    pub(crate) fn generate_hilbert_to_coords_lut<const NUM_CHILDREN: usize, const NUM_TRANSFORMS: usize>() where DM::Dilated: std::fmt::Display {
+    pub(crate) fn generate_hilbert_to_coords_lut() where DM::Dilated: std::fmt::Display {
+        match D {
+            2 => Self::generate_hilbert_to_coords_lut_internal::<{1 << 2}, {2 * (1 << (2 - 1))}>(),
+            3 => Self::generate_hilbert_to_coords_lut_internal::<{1 << 3}, {3 * (1 << (3 - 1))}>(),
+            4 => Self::generate_hilbert_to_coords_lut_internal::<{1 << 4}, {4 * (1 << (4 - 1))}>(),
+            5 => Self::generate_hilbert_to_coords_lut_internal::<{1 << 5}, {5 * (1 << (5 - 1))}>(),
+            _ => unimplemented!()
+        }
+    }
+
+    pub(crate) fn generate_hilbert_to_coords_lut_internal<const NUM_CHILDREN: usize, const NUM_TRANSFORMS: usize>() where DM::Dilated: std::fmt::Display {
         let lower_mask = DM::Dilated::one().shl(D).sub(DM::Dilated::one());
 
         let mut num_transforms = 0;
         let mut transform_map = [[None; D]; NUM_CHILDREN];
-        let mut transforms = [[(0, DM::Dilated::zero(), DM::Dilated::zero()); NUM_CHILDREN]; NUM_TRANSFORMS];
+        let mut transforms = [[(0, DM::Dilated::zero(), DM::Dilated::zero(), 0, [0; NUM_CHILDREN]); NUM_CHILDREN]; NUM_TRANSFORMS];
+
+        let mut num_flip_axes = 0;
+        let mut flip_axes_map = [None; NUM_CHILDREN];
 
         // Precalculate initial transforms
         // This forces the first few transforms to be ordered such that we know which we
         // should start on for a given order value in the walk methods
-        for i in 0..D {
-            let rotate_amount = (D - 1) - i;
+//        for i in 0..D {
+//            let rotate_amount = (D - 1) - i;
+//
+//            // Store ID of this transform
+//            let tx_id = transform_map[0][rotate_amount].unwrap_or_else(|| { num_transforms += 1; num_transforms - 1 });
+//            transform_map[0][rotate_amount] = Some(tx_id);
+//
+//
+//        }
 
-            // Store ID of this transform
-            let tx_id = transform_map[0][rotate_amount].unwrap_or_else(|| { num_transforms += 1; num_transforms - 1 });
-            transform_map[0][rotate_amount] = Some(tx_id);
+        let num_rotations = D;
+        let num_axis_flips = 1 << (D - 1);
+
+        println!("");
+        println!("D: {}", D);
+        println!("num_rotations: {}", num_rotations);
+        println!("num_axis_flips: {}", num_axis_flips);
+
+        // Enumerate all possible axis flips
+        // This forces the ordering of flip IDs to be known values
+        for i in 0..NUM_CHILDREN {
+            let flip_axes = axis_transform(DM::Dilated::from_usize(i));
+            let flip_id = flip_axes_map[flip_axes.to_usize()].unwrap_or_else(|| { num_flip_axes += 1; num_flip_axes - 1 });
+            flip_axes_map[flip_axes.to_usize()] = Some(flip_id);
         }
+
+        // Enumerate all possible transforms
+        // This forces the order of transform indices to be known values
+        for i in 0..NUM_CHILDREN {
+            for rotate_amount in 0..D {
+                // Find initial flip and rotate for index partial i (note xor of previous flip_axes is not required here, but previous rotation is)
+                let flip_axes = shl_cyclic::<_, D>(axis_transform(DM::Dilated::from_usize(i)), rotate_amount, lower_mask);
+                let rotate_amount = (rotation_transform(i) + rotate_amount + 1) % D;
+
+                let flip_id = flip_axes_map[flip_axes.to_usize()].unwrap();
+
+                let tx_id_test = rotate_amount * num_axis_flips + flip_id;
+
+                // Store ID of this transform
+                if transform_map[flip_axes.to_usize()][rotate_amount].is_none() {
+                    num_transforms += 1;
+                }
+                transform_map[flip_axes.to_usize()][rotate_amount] = Some(tx_id_test);
+            }
+        }
+        assert_eq!(num_transforms, NUM_TRANSFORMS);
 
         // Iterate all possible transforms
         for rotate_amount in 0..D {
@@ -673,9 +724,8 @@ where
                 let flip_axes = shl_cyclic::<_, D>(axis_transform(DM::Dilated::from_usize(i)), rotate_amount, lower_mask);
                 let rotate_amount = (rotation_transform(i) + rotate_amount + 1) % D;
 
-                // Store ID of this transform
-                let tx_id = transform_map[flip_axes.to_usize()][rotate_amount].unwrap_or_else(|| { num_transforms += 1; num_transforms - 1 });
-                transform_map[flip_axes.to_usize()][rotate_amount] = Some(tx_id);
+                // ID of this transform
+                let tx_id = transform_map[flip_axes.to_usize()][rotate_amount].unwrap();
 
                 // Within this transform, it's possible to decend to a number of other transforms depending on the index partial j
                 for j in 0..NUM_CHILDREN {
@@ -683,18 +733,59 @@ where
                     transforms[tx_id][j].1 = flip_axes.bit_xor(shl_cyclic::<_, D>(gray(DM::Dilated::from_usize(j)), rotate_amount, lower_mask));
                     transforms[tx_id][j].2 = gray_inverse::<_, D>(shr_cyclic::<_, D>(flip_axes.bit_xor(DM::Dilated::from_usize(j)), rotate_amount, lower_mask));
 
+                    transforms[tx_id][j].4[transforms[tx_id][j].3] = i;
+                    transforms[tx_id][j].3 += 1;
+
                     // To find what the next transform would be, we flip and rotate again
                     let flip_axes = flip_axes.bit_xor(shl_cyclic::<_, D>(axis_transform(DM::Dilated::from_usize(j)), rotate_amount, lower_mask));
                     let rotate_amount = (rotation_transform(j) + rotate_amount + 1) % D;
 
-                    // Store next transform ID
-                    let next_tx_id = transform_map[flip_axes.to_usize()][rotate_amount].unwrap_or_else(|| { num_transforms += 1; num_transforms - 1 });
-                    transform_map[flip_axes.to_usize()][rotate_amount] = Some(next_tx_id);
-                    transforms[tx_id][j].0 = next_tx_id;
+                    // Cache next transform ID
+                    transforms[tx_id][j].0 = transform_map[flip_axes.to_usize()][rotate_amount].unwrap();
                 }
             }
         }
 
+        println!("num_transforms: {}", num_transforms);
+        println!("");
+
+        let binary = false;
+        if binary {
+            print!("  hibert index: ");
+            for i in 0..NUM_CHILDREN {
+                print!("{:7b} ", i);
+            }
+            println!("");
+            for i in 0..num_transforms {
+                print!("    tx {:7b}: ", i);
+                for j in 0..NUM_CHILDREN {
+                    let lut_data = transforms[i][j];
+                    print!("{:7b} ", lut_data.0 % num_axis_flips);
+                }
+                println!("");
+            }
+        } else {
+            print!("|    hibert_index -> | ");
+            for i in 0..NUM_CHILDREN {
+                print!("{:2} | ", i);
+            }
+            println!("");
+            print!("| ------------------ | ");
+            for _ in 0..NUM_CHILDREN {
+                print!("-- | ");
+            }
+            println!("");
+            for i in 0..num_transforms {
+                print!("| transform_index {:2} | ", i);
+                for j in 0..NUM_CHILDREN {
+                    let lut_data = transforms[i][j];
+                    print!("{:2} | ", lut_data.0 / num_axis_flips);
+                }
+                println!("");
+            }
+        }
+
+        /*
         println!("pub const TRANSFORM_LUT_D{}: [[u8; {}]; {}] = [", D, NUM_CHILDREN, num_transforms);
         for i in 0..num_transforms {
             print!("    [");
@@ -741,22 +832,7 @@ where
             let lut_data = transforms[i][NUM_CHILDREN - 1];
             println!("{}],", lut_data.2);
         }
-        println!("];\n");
-
-        // Your current transform ID should directly influence your next transform ID
-        // transform_lookup = TRANSFORM_LUT[transform_lookup]
-
-//        println!("pub const TRANSFORM_LUT_D{}: [[usize; {}]; {}] = [", D, NUM_CHILDREN, NUM_CHILDREN);
-//
-//        println!("pub const MORTON_LUT_D{}: [[usize; {}]; {}] = [", D, NUM_CHILDREN, NUM_CHILDREN);
-//        for i in 0..NUM_CHILDREN {
-//            print!("    [");
-//            for j in 0..(NUM_CHILDREN - 1) {
-//                print!("{}, ", lookup[i][j]);
-//            }
-//            println!("{}],", lookup[i][N - 1]);
-//        }
-//        println!("];");
+        println!("];\n");*/
     }
 }
 
@@ -782,6 +858,7 @@ where
         Self(index)
     }
 
+    #[inline(never)]
     fn from_coords(coords: [Self::Coord; D]) -> Self {
         let lower_mask = Self::Index::one().shl(D).sub(Self::Index::one());
         let morton_index = Morton::<DM, D>::from_coords(coords).index();
@@ -808,30 +885,22 @@ where
         Self(hilbert_index)
     }
 
+    #[inline(never)]
     fn coords(&self) -> [Self::Coord; D] {
         let lower_mask = Self::Index::one().shl(D).sub(Self::Index::one());
         let mut morton_index = Self::Index::zero();
         if D < 6 {
-            let order = (DM::Dilated::bits() - self.0.lz() + D - 1) / D;
-            let mut transform = order % D;
-            for shift in (0..order).rev().map(|i| i * D) {
-                let hilbert_partial = self.0.shr(shift).bit_and(lower_mask).to_usize();
+            Self::walk_static_lut(self.0, 0, lower_mask, |transform, hilbert_partial, shift| {
                 let morton_partial = Self::Index::from_u8(match D {
-                    2 => static_lut::MORTON_LUT_D2[transform][hilbert_partial],
-                    3 => static_lut::MORTON_LUT_D3[transform][hilbert_partial],
-                    4 => static_lut::MORTON_LUT_D4[transform][hilbert_partial],
-                    5 => static_lut::MORTON_LUT_D5[transform][hilbert_partial],
+                    2 => static_lut::MORTON_LUT_D2[transform][hilbert_partial.to_usize()],
+                    3 => static_lut::MORTON_LUT_D3[transform][hilbert_partial.to_usize()],
+                    4 => static_lut::MORTON_LUT_D4[transform][hilbert_partial.to_usize()],
+                    5 => static_lut::MORTON_LUT_D5[transform][hilbert_partial.to_usize()],
                     _ => unreachable!()
                 });
                 morton_index = morton_index.bit_or(morton_partial.shl(shift));
-                transform = match D {
-                    2 => static_lut::TRANSFORM_LUT_D2[transform][hilbert_partial],
-                    3 => static_lut::TRANSFORM_LUT_D3[transform][hilbert_partial],
-                    4 => static_lut::TRANSFORM_LUT_D4[transform][hilbert_partial],
-                    5 => static_lut::TRANSFORM_LUT_D5[transform][hilbert_partial],
-                    _ => unreachable!()
-                } as usize;
-            }
+                hilbert_partial
+            });
         } else {
             Self::walk(self.0, 0, lower_mask, |hilbert_partial, shift, rotate_amount, flip_axes| {
                 let morton_partial = flip_axes.bit_xor(shl_cyclic::<_, D>(gray(hilbert_partial), rotate_amount, lower_mask));
@@ -904,24 +973,10 @@ mod tests {
 
     #[test]
     fn generate_lut() {
-        const MAX_NUM_BITS: usize = 128;
-        super::Hilbert::<dilate::Expand<u8, 2>, 2>::generate_hilbert_to_coords_lut::<{1 << 2}, {2 * (1 << (2 - 1))}>();
-        super::Hilbert::<dilate::Expand<u8, 3>, 3>::generate_hilbert_to_coords_lut::<{1 << 3}, {3 * (1 << (3 - 1))}>();
-        super::Hilbert::<dilate::Expand<u8, 4>, 4>::generate_hilbert_to_coords_lut::<{1 << 4}, {4 * (1 << (4 - 1))}>();
-        super::Hilbert::<dilate::Expand<u8, 5>, 5>::generate_hilbert_to_coords_lut::<{1 << 5}, {5 * (1 << (5 - 1))}>();
-//        super::Hilbert::<dilate::Expand<u8, 3>, 3>::generate_hilbert_to_coords_lut::<{1 << 3}>();
-//        super::Hilbert::<dilate::Expand<u8, 4>, 4>::generate_hilbert_to_coords_lut::<{1 << 4}>();
-//        super::Hilbert::<dilate::Expand<u8, 5>, 5>::generate_hilbert_to_coords_lut::<{1 << 5}>();
-//        super::Hilbert::<dilate::Expand<u8, 6>, 6>::generate_hilbert_to_coords_lut::<{1 << 6}>();
-//        super::Hilbert::<dilate::Expand<u8, 7>, 7>::generate_hilbert_to_coords_lut::<{1 << 7}>();
-//        super::Hilbert::<dilate::Expand<u8, 8>, 8>::generate_hilbert_to_coords_lut::<{1 << 8}>();
-//        super::Hilbert::<dilate::Expand<u8, 9>, 9>::generate_hilbert_to_coords_lut::<{1 << 9}>();
-//        super::Hilbert::<dilate::Expand<u8, 10>, 10>::generate_hilbert_to_coords_lut::<{1 << 10}>();
-//        super::Hilbert::<dilate::Expand<u8, 11>, 11>::generate_hilbert_to_coords_lut::<{1 << 11}>();
-//        super::Hilbert::<dilate::Expand<u8, 12>, 12>::generate_hilbert_to_coords_lut::<{1 << 12}>();
-//        super::Hilbert::<dilate::Expand<u8, 13>, 13>::generate_hilbert_to_coords_lut::<{1 << 13}>();
-//        super::Hilbert::<dilate::Expand<u8, 14>, 14>::generate_hilbert_to_coords_lut::<{1 << 14}>();
-//        super::Hilbert::<dilate::Expand<u8, 15>, 15>::generate_hilbert_to_coords_lut::<{1 << 15}>();
+        super::Hilbert::<dilate::Expand<u8, 2>, 2>::generate_hilbert_to_coords_lut();
+        super::Hilbert::<dilate::Expand<u8, 3>, 3>::generate_hilbert_to_coords_lut();
+        super::Hilbert::<dilate::Expand<u8, 4>, 4>::generate_hilbert_to_coords_lut();
+        super::Hilbert::<dilate::Expand<u8, 5>, 5>::generate_hilbert_to_coords_lut();
     }
 
     test_curve!(hilbert_expand, true, u8, 2, 3, 4, 5, 6, 7, 8);
