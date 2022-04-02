@@ -22,10 +22,10 @@ other curve implementations, such as Hilbert - and we have plans to include them
 
 # Features
 * High performance - Ready to use in performance sensitive contexts
-* Multiple types - Supports `u8`, `u16`, `u32`, `u64`, `u128`, `usize` (signed versions not yet planned)
 * N-dimensional - Suitable for multi-dimensional applications (up to 16 dimensions under certain conditions)
-* Extensible - Flexible trait based implementation
+* Type safe - Multiple input types with known output types (supports `u8`, `u16`, `u32`, `u64`, `u128`, `usize`)
 * `no_std` - Suitable for embedded devices (additional standard library features can be enabled via the `std` feature)
+* Extensible - Flexible trait based implementation
 * Minimal dependencies - Depends only on [dilate](https://github.com/alexmadeathing/dilate) for integer dilation
 
 # Getting Started
