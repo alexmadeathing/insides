@@ -749,22 +749,8 @@ where
         println!("num_transforms: {}", num_transforms);
         println!("");
 
-        let binary = false;
-        if binary {
-            print!("  hibert index: ");
-            for i in 0..NUM_CHILDREN {
-                print!("{:7b} ", i);
-            }
-            println!("");
-            for i in 0..num_transforms {
-                print!("    tx {:7b}: ", i);
-                for j in 0..NUM_CHILDREN {
-                    let lut_data = transforms[i][j];
-                    print!("{:7b} ", lut_data.0 % num_axis_flips);
-                }
-                println!("");
-            }
-        } else {
+        let md = false;
+        if md {
             print!("|    hibert_index -> | ");
             for i in 0..NUM_CHILDREN {
                 print!("{:2} | ", i);
@@ -783,6 +769,18 @@ where
                 }
                 println!("");
             }
+        } else {
+            println!("pub const TRANSFORM_LUT_D{}: [[u8; {}]; {}] = [", D, NUM_CHILDREN, NUM_TRANSFORMS);
+            for i in 0..num_transforms {
+                print!("    [");
+                for j in 0..(NUM_CHILDREN - 1) {
+                    let lut_data = transforms[i][j];
+                    print!("{:0>2}, ", lut_data.0);
+                }
+                let lut_data = transforms[i][NUM_CHILDREN - 1];
+                println!("{:0>2}],", lut_data.0);
+            }
+            println!("];");
         }
 
         /*
