@@ -72,13 +72,34 @@
 //! assert_eq!(location.coords(), [1, 2, 3]);
 //! ```
 
-/// Morton curve implementation
-pub mod morton;
-
 #[doc(hidden)]
 pub use dilate::*;
 
-pub use morton::{Morton, MortonIndex, MortonCoord};
+/// Morton curve implementation
+pub mod morton;
+pub use crate::morton::Morton;
+
+pub(crate) mod internal;
+
+/// Trait wrapper for coordinates
+pub trait CurveCoord: internal::NumTraits {}
+
+impl CurveCoord for u8 {}
+impl CurveCoord for u16 {}
+impl CurveCoord for u32 {}
+impl CurveCoord for u64 {}
+impl CurveCoord for u128 {}
+impl CurveCoord for usize {}
+
+/// Trait wrapper for indices
+pub trait CurveIndex: internal::NumTraits {}
+
+impl CurveIndex for u8 {}
+impl CurveIndex for u16 {}
+impl CurveIndex for u32 {}
+impl CurveIndex for u64 {}
+impl CurveIndex for u128 {}
+impl CurveIndex for usize {}
 
 /// Direction to search within an axis when making queries
 #[derive(Clone, Copy, Debug)]
@@ -93,18 +114,21 @@ pub enum QueryDirection {
 /// Provides conversion to and from coordinates
 // I'd really love to get rid of the generic parameter here but I think it's waiting on:
 // https://github.com/rust-lang/rust/issues/76560
-pub trait Encoding<const D: usize> {
+pub trait SpaceFillingCurve<const D: usize> {
     /// Coordinate type
-    type Coord;
+    type Coord: CurveCoord;
 
     /// Index type
-    type Index;
+    type Index: CurveIndex;
 
     /// Maximum value for a single coordinate
     const COORD_MAX: Self::Coord;
 
     /// Maximum value for an encoded index
     const INDEX_MAX: Self::Index;
+
+    /// Number of dimensions
+    const D: usize;
 
     /// Create a new location from a pre-encoded curve index
     /// 
@@ -134,7 +158,7 @@ pub trait Encoding<const D: usize> {
     /// [Neighbours].
     /// 
     /// # Panics
-    /// Panics if coordinate is greater than [Encoding::COORD_MAX].
+    /// Panics if coordinate is greater than [SpaceFillingCurve::COORD_MAX].
     /// 
     /// # Examples
     /// ```rust
@@ -179,7 +203,7 @@ pub trait Encoding<const D: usize> {
 }
 
 /// Provides methods for retrieving adacent locations within a cluster
-pub trait Siblings<const D: usize>: Encoding<D> {
+pub trait Siblings<const D: usize>: SpaceFillingCurve<D> {
     /// Get sibling location on axis within local cluster
     /// 
     /// The sibling is considered to be within the local cluster this location
@@ -231,7 +255,7 @@ pub trait Siblings<const D: usize>: Encoding<D> {
 }
 
 /// Provides methods for retrieving adacent locations
-pub trait Neighbours<const D: usize>: Encoding<D> {
+pub trait Neighbours<const D: usize>: SpaceFillingCurve<D> {
     /// Get neighbour location on axis
     /// 
     /// This method gets the neighbour location in a direction along on an axis.

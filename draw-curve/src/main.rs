@@ -72,14 +72,14 @@ struct Args {
     colb: LocalColor,
 }
 
-fn draw_curve<T, B>(backend: &mut B, args: &Args) where T: Encoding<2, Coord = u32, Index = u32>, B: DrawingBackend {
+fn draw_curve<T, B>(backend: &mut B, args: &Args) where T: SpaceFillingCurve<2, Coord = u8, Index = u16>, B: DrawingBackend {
     let curve_edge_width = 1 << args.depth;
     let curve_len = curve_edge_width * curve_edge_width;
 
     let cell_size = args.outsize as f32 / curve_edge_width as f32;
     let half_cell_size = cell_size * 0.5;
 
-    let cell_center = |c: [u32; 2]| ((c[0] as f32 * cell_size + half_cell_size) as i32, args.outsize as i32 - (c[1] as f32 * cell_size + half_cell_size) as i32);
+    let cell_center = |c: [T::Coord; 2]| ((c[0] as f32 * cell_size + half_cell_size) as i32, args.outsize as i32 - (c[1] as f32 * cell_size + half_cell_size) as i32);
 
     let blob_radius = half_cell_size * 0.2;
     let line_width = half_cell_size * 0.15;
@@ -90,11 +90,13 @@ fn draw_curve<T, B>(backend: &mut B, args: &Args) where T: Encoding<2, Coord = u
             let t = i as f32 / curve_len as f32;
             line_col = lerp_colour(args.cola, args.colb, t).into();
         }
-        let b = cell_center(T::from_index(i as u32).coords());
+        let sfc = T::from_index(i as T::Index);
+        let coords = sfc.coords();
+        let b = cell_center(coords);
         let style = ShapeStyle::from(line_col).stroke_width(line_width as u32);
         backend.draw_circle(b, blob_radius as u32, &style, true).expect("Failed to draw circle");
         if i > 0 {
-            let a = cell_center(T::from_index(i as u32 - 1).coords());
+            let a = cell_center(T::from_index(i as T::Index - 1).coords());
             backend.draw_line(a, b, &style).expect("Failed to draw line");
         }
         backend.present().expect("Failed to present frame");
@@ -112,7 +114,8 @@ fn draw<B>(mut backend: B, args: &Args) where B: DrawingBackend {
     backend.present().expect("Failed to present frame");
 
     match args.curve {
-        Curve::Morton => draw_curve::<Morton::<Fixed<u32, 2>, 2>, _>(&mut backend, args),
+        Curve::Morton => draw_curve::<Morton::<Expand<u8, 2>, 2>, _>(&mut backend, args),
+        Curve::Hilbert => draw_curve::<Hilbert::<Expand<u8, 2>, 2>, _>(&mut backend, args),
     };
 }
 

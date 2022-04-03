@@ -1,6 +1,7 @@
 [![Crates.io](https://img.shields.io/crates/d/insides.svg)](https://crates.io/crates/insides)
 [![Anti-Capitalist Software License (v 1.4)](https://img.shields.io/badge/license-Anti--Capitalist%20(v%201.4)-brightgreen)](LICENSE.md)
 [![alexmadeathing](https://circleci.com/gh/alexmadeathing/insides.svg?style=shield)](https://app.circleci.com/pipelines/github/alexmadeathing/insides?filter=all)
+[![rustc 1.51+]][Rust 1.51]
 
 # WARNING
 This library is in an alpha stage of development. Its interface may be subject to change.
