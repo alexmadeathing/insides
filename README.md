@@ -35,7 +35,7 @@ First, link insides into your project's cargo.toml.
 Check for the latest version at [crates.io](https://crates.io/crates/insides):
 ```toml
 [dependencies]
-insides = "0.1.0"
+insides = "0.1.1"
 ```
 
 Next, import insides into your project and try out some of the features:
