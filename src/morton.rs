@@ -153,11 +153,24 @@ where
     DM::Dilated: CurveIndex,
 {
     #[inline]
-    fn neighbour_on_axis(&self, axis: usize, direction: QueryDirection) -> Self {
+    fn neighbour_on_axis(&self, axis: usize, direction: QueryDirection) -> Option<Self> {
         debug_assert!(axis < D, "Parameter 'axis' exceeds maximum");
 
-        // This is a faster eqivalent of converting to coords, adding or subtracting one, then converting back
-        // It's faster because it bypasses the undilation and dilation stage and instead uses dilated arithmetic
+        let coord = DilatedInt::<DM>::new(self.0.shr(axis).bit_and(DM::DILATED_MAX));
+        let coord = match direction {
+            QueryDirection::Positive => if coord.value() < DM::DILATED_MAX { Some(coord.add_one()) } else { None },
+            QueryDirection::Negative => if coord.value() > NumTraits::zero() { Some(coord.sub_one()) } else { None },
+        };
+        coord.map(|coord| {
+            let index = self.0.bit_and(DM::DILATED_MAX.shl(axis).bit_not());
+            Self(index.bit_or(coord.value().shl(axis)))
+        })
+    }
+
+    #[inline]
+    fn neighbour_on_axis_wrapping(&self, axis: usize, direction: QueryDirection) -> Self {
+        debug_assert!(axis < D, "Parameter 'axis' exceeds maximum");
+
         let coord = DilatedInt::<DM>::new(self.0.shr(axis).bit_and(DM::DILATED_MAX));
         let coord = match direction {
             QueryDirection::Positive => coord.add_one(),

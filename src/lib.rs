@@ -72,6 +72,8 @@
 //! assert_eq!(location.coords(), [1, 2, 3]);
 //! ```
 
+use core::{fmt::Debug, hash::Hash};
+
 #[doc(hidden)]
 pub use dilate::*;
 
@@ -114,7 +116,7 @@ pub enum QueryDirection {
 /// Provides conversion to and from coordinates
 // I'd really love to get rid of the generic parameter here but I think it's waiting on:
 // https://github.com/rust-lang/rust/issues/76560
-pub trait SpaceFillingCurve<const D: usize> {
+pub trait SpaceFillingCurve<const D: usize>: Sized + Ord + Copy + Default + Debug + Hash {
     /// Coordinate type
     type Coord: CurveCoord;
 
@@ -262,6 +264,10 @@ pub trait Neighbours<const D: usize>: SpaceFillingCurve<D> {
     /// It is equvalent to adding 1 to or subtracting 1 from the encoded
     /// coordinate.
     /// 
+    /// If the neighbour would cause a coordinate to wrap, this method returns
+    /// None instead. For a wrapping version, please see
+    /// [neighbour_on_axis_wrapping()](Neighbours::neighbour_on_axis_wrapping()).
+    /// 
     /// Unlike the [Siblings] implementation, methods in the Neighbours trait
     /// may cross cluster boundaries.
     /// 
@@ -274,13 +280,54 @@ pub trait Neighbours<const D: usize>: SpaceFillingCurve<D> {
     /// 
     /// let location = Morton::<Expand<u16, 3>, 3>::from_coords([1, 2, 3]);
     /// 
-    /// assert_eq!(location.neighbour_on_axis(0, QueryDirection::Negative).coords(), [0, 2, 3]);
-    /// assert_eq!(location.neighbour_on_axis(1, QueryDirection::Negative).coords(), [1, 1, 3]);
-    /// assert_eq!(location.neighbour_on_axis(2, QueryDirection::Negative).coords(), [1, 2, 2]);
+    /// assert_eq!(location.neighbour_on_axis(0, QueryDirection::Negative).unwrap().coords(), [0, 2, 3]);
+    /// assert_eq!(location.neighbour_on_axis(1, QueryDirection::Negative).unwrap().coords(), [1, 1, 3]);
+    /// assert_eq!(location.neighbour_on_axis(2, QueryDirection::Negative).unwrap().coords(), [1, 2, 2]);
     /// 
-    /// assert_eq!(location.neighbour_on_axis(0, QueryDirection::Positive).coords(), [2, 2, 3]);
-    /// assert_eq!(location.neighbour_on_axis(1, QueryDirection::Positive).coords(), [1, 3, 3]);
-    /// assert_eq!(location.neighbour_on_axis(2, QueryDirection::Positive).coords(), [1, 2, 4]);
+    /// assert_eq!(location.neighbour_on_axis(0, QueryDirection::Positive).unwrap().coords(), [2, 2, 3]);
+    /// assert_eq!(location.neighbour_on_axis(1, QueryDirection::Positive).unwrap().coords(), [1, 3, 3]);
+    /// assert_eq!(location.neighbour_on_axis(2, QueryDirection::Positive).unwrap().coords(), [1, 2, 4]);
+    /// 
+    /// let edge_location = Morton::<Expand<u16, 2>, 2>::from_coords([0, u16::MAX]);
+    /// assert_eq!(edge_location.neighbour_on_axis(0, QueryDirection::Negative), None);
+    /// assert_eq!(edge_location.neighbour_on_axis(1, QueryDirection::Positive), None);
     /// ```
-    fn neighbour_on_axis(&self, axis: usize, direction: QueryDirection) -> Self;
+    fn neighbour_on_axis(&self, axis: usize, direction: QueryDirection) -> Option<Self>;
+
+    /// Get neighbour location on axis with wrapping
+    /// 
+    /// This method gets the neighbour location in a direction along on an axis.
+    /// It is equvalent to adding 1 to or subtracting 1 from the encoded
+    /// coordinate.
+    /// 
+    /// This method allows coordinates to wrap between zero and
+    /// [COORD_MAX](SpaceFillingCurve::COORD_MAX). For a non-wrapping version,
+    /// please see
+    /// [neighbour_on_axis()](Neighbours::neighbour_on_axis()).
+    /// 
+    /// Unlike the [Siblings] implementation, methods in the Neighbours trait
+    /// may cross cluster boundaries.
+    /// 
+    /// # Panics
+    /// Panics if parameter 'axis' is greater than or equal to D
+    /// 
+    /// # Examples
+    /// ```rust
+    /// use insides::*;
+    /// 
+    /// let location = Morton::<Expand<u16, 3>, 3>::from_coords([1, 2, 3]);
+    /// 
+    /// assert_eq!(location.neighbour_on_axis_wrapping(0, QueryDirection::Negative).coords(), [0, 2, 3]);
+    /// assert_eq!(location.neighbour_on_axis_wrapping(1, QueryDirection::Negative).coords(), [1, 1, 3]);
+    /// assert_eq!(location.neighbour_on_axis_wrapping(2, QueryDirection::Negative).coords(), [1, 2, 2]);
+    /// 
+    /// assert_eq!(location.neighbour_on_axis_wrapping(0, QueryDirection::Positive).coords(), [2, 2, 3]);
+    /// assert_eq!(location.neighbour_on_axis_wrapping(1, QueryDirection::Positive).coords(), [1, 3, 3]);
+    /// assert_eq!(location.neighbour_on_axis_wrapping(2, QueryDirection::Positive).coords(), [1, 2, 4]);
+    /// 
+    /// let edge_location = Morton::<Expand<u16, 2>, 2>::from_coords([0, u16::MAX]);
+    /// assert_eq!(edge_location.neighbour_on_axis_wrapping(0, QueryDirection::Negative).coords(), [u16::MAX, u16::MAX]);
+    /// assert_eq!(edge_location.neighbour_on_axis_wrapping(1, QueryDirection::Positive).coords(), [0, 0]);
+    /// ```
+    fn neighbour_on_axis_wrapping(&self, axis: usize, direction: QueryDirection) -> Self;
 }
