@@ -242,14 +242,14 @@ pub(crate) mod tests {
                 let sfc = SFC::from_index(NumTraits::from_usize(i));
                 let coords = sfc.coords();
                 for axis in 0..D {
-                    let mut sib_coords = coords;
-                    sib_coords[axis] =
+                    let mut expected_coords = coords;
+                    expected_coords[axis] =
                         if coords[axis].bit_and(NumTraits::one()) == NumTraits::zero() {
                             coords[axis].add(NumTraits::one())
                         } else {
                             coords[axis].sub(NumTraits::one())
                         };
-                    assert_eq!(sfc.sibling_on_axis(axis).coords(), sib_coords);
+                    assert_eq!(sfc.sibling_on_axis(axis).coords(), expected_coords);
                 }
             }
         }
@@ -265,22 +265,22 @@ pub(crate) mod tests {
                 let sfc = SFC::from_index(NumTraits::from_usize(i));
                 let coords = sfc.coords();
                 for axis in 0..D {
-                    let mut sib_coords = coords;
-                    sib_coords[axis] =
+                    let mut expected_coords = coords;
+                    expected_coords[axis] =
                         if coords[axis].bit_and(NumTraits::one()) == NumTraits::zero() {
                             coords[axis].add(NumTraits::one())
                         } else {
                             coords[axis]
                         };
-                    assert_eq!(sfc.sibling_or_same_on_axis(axis, QueryDirection::Positive).coords(), sib_coords);
+                    assert_eq!(sfc.sibling_or_same_on_axis(axis, QueryDirection::Positive).coords(), expected_coords);
 
-                    sib_coords[axis] =
+                    expected_coords[axis] =
                         if coords[axis].bit_and(NumTraits::one()) == NumTraits::one() {
                             coords[axis].sub(NumTraits::one())
                         } else {
                             coords[axis]
                         };
-                    assert_eq!(sfc.sibling_or_same_on_axis(axis, QueryDirection::Negative).coords(), sib_coords);
+                    assert_eq!(sfc.sibling_or_same_on_axis(axis, QueryDirection::Negative).coords(), expected_coords);
                 }
             }
         }
@@ -296,22 +296,54 @@ pub(crate) mod tests {
                 let sfc = SFC::from_index(NumTraits::from_usize(i));
                 let coords = sfc.coords();
                 for axis in 0..D {
-                    let mut nbr_coords = coords;
-                    nbr_coords[axis] =
+                    let expected = if coords[axis] != SFC::COORD_MAX {
+                        let mut nbr_coords = coords;
+                        nbr_coords[axis] = coords[axis].add(NumTraits::one());
+                        Some(SFC::from_coords(nbr_coords))
+                    } else {
+                        None
+                    };
+                    assert_eq!(sfc.neighbour_on_axis(axis, QueryDirection::Positive), expected);
+
+                    let expected = if coords[axis] != NumTraits::zero() {
+                        let mut nbr_coords = coords;
+                        nbr_coords[axis] = coords[axis].sub(NumTraits::one());
+                        Some(SFC::from_coords(nbr_coords))
+                    } else {
+                        None
+                    };
+                    assert_eq!(sfc.neighbour_on_axis(axis, QueryDirection::Negative), expected);
+                }
+            }
+        }
+
+        pub fn neighbour_on_axis_wrapping_is_correct()
+        where
+            SFC: Neighbours<D>,
+            <SFC as SpaceFillingCurve<D>>::Coord: Debug,
+        {
+            let num_indices: usize = SFC::INDEX_MAX.to_usize().min(MAX_TESTED_INDICES);
+            for i in 0..num_indices {
+                // It's a shame that we have to rely on other SFC methods to test this trait... not sure of a better solution yet
+                let sfc = SFC::from_index(NumTraits::from_usize(i));
+                let coords = sfc.coords();
+                for axis in 0..D {
+                    let mut expected_coords = coords;
+                    expected_coords[axis] =
                         if coords[axis] != SFC::COORD_MAX {
                             coords[axis].add(NumTraits::one())
                         } else {
                             NumTraits::zero()
                         };
-                    assert_eq!(sfc.neighbour_on_axis(axis, QueryDirection::Positive).coords(), nbr_coords);
+                    assert_eq!(sfc.neighbour_on_axis_wrapping(axis, QueryDirection::Positive).coords(), expected_coords);
 
-                    nbr_coords[axis] =
+                    expected_coords[axis] =
                         if coords[axis] != NumTraits::zero() {
                             coords[axis].sub(NumTraits::one())
                         } else {
                             SFC::COORD_MAX
                         };
-                    assert_eq!(sfc.neighbour_on_axis(axis, QueryDirection::Negative).coords(), nbr_coords);
+                    assert_eq!(sfc.neighbour_on_axis_wrapping(axis, QueryDirection::Negative).coords(), expected_coords);
                 }
             }
         }
@@ -388,6 +420,11 @@ pub(crate) mod tests {
                     #[test]
                     fn neighbour_on_axis_is_correct() {
                         SpaceFillingCurveTester::<TestedCurve, $d>::neighbour_on_axis_is_correct();
+                    }
+
+                    #[test]
+                    fn neighbour_on_axis_wrapping_is_correct() {
+                        SpaceFillingCurveTester::<TestedCurve, $d>::neighbour_on_axis_wrapping_is_correct();
                     }
                 }
             }
