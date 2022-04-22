@@ -35,29 +35,29 @@
 
 use dilate::*;
 
-use super::{CurveCoord, CurveIndex, SpaceFillingCurve, Neighbours, QueryDirection, Siblings};
+use super::{CurveCoord, CurveIndex, Neighbours, QueryDirection, Siblings, SpaceFillingCurve};
 
-use crate::internal::NumTraits;
+use crate::internal::{array_from_fn, NumTraits};
 
 /// A Morton encoded space filling curve implementation
-/// 
+///
 /// Morton encoding, also known as a
 /// [Z-order curve](https://en.wikipedia.org/wiki/Z-order_curve), is a space
 /// filling algorithm which maps a multidimensional set of coordinates to one
 /// dimension, achieved by interleaving the bit sequence of each coordinate
 /// value.
-/// 
+///
 /// Whilst other encoding methods may exhibit better spatial locality (such as
 /// the Hilbert curve), the Morton curve offers excellent CPU performance,
 /// since most behaviours can be reduced to a simple set of bitwise operations,
 /// making it an ideal choice for applications such and quad trees and octrees.
-/// 
+///
 /// # Examples
 /// ```rust
 /// use insides::*;
-/// 
+///
 /// let location = Morton::<Expand<u16, 3>, 3>::from_coords([1, 2, 3]);
-/// 
+///
 /// assert_eq!(location.index(), 0b110101);
 /// assert_eq!(location.coords(), [1, 2, 3]);
 /// ```
@@ -80,7 +80,9 @@ where
 {
     type Coord = DM::Undilated;
     type Index = DM::Dilated;
+    const COORD_BITS: usize = DM::UNDILATED_BITS;
     const COORD_MAX: Self::Coord = DM::UNDILATED_MAX;
+    const INDEX_BITS: usize = DM::DILATED_BITS;
     const INDEX_MAX: Self::Index = DM::DILATED_MASK;
     const D: usize = D;
 
@@ -99,7 +101,7 @@ where
             *coords.iter().max().unwrap() <= Self::COORD_MAX,
             "Parameter 'coords' contains a value which exceeds maximum"
         );
-        let mut v = DM::Dilated::zero();
+        let mut v = Self::Index::zero();
         for (axis, coord) in coords.into_iter().enumerate() {
             v = v.bit_or(DM::dilate(coord).value().shl(axis));
         }
@@ -108,7 +110,9 @@ where
 
     #[inline]
     fn coords(&self) -> [Self::Coord; D] {
-        crate::internal::array_from_fn::<_, _, D>(|i| DilatedInt::<DM>::new(self.0.shr(i).bit_and(DM::DILATED_MAX)).undilate())
+        array_from_fn::<_, _, D>(|i| {
+            DilatedInt::<DM>::new(self.0.shr(i).bit_and(DM::DILATED_MAX)).undilate()
+        })
     }
 
     #[inline]
@@ -125,23 +129,30 @@ where
     DM::Dilated: CurveIndex,
 {
     #[inline]
-    fn sibling_on_axis(&self, axis: usize) -> Self {
-        Self(self.0.bit_xor(DM::Dilated::one().shl(axis)))
+    fn sibling_on_axis_toggle(&self, axis: usize) -> Self {
+        Self(self.0.bit_xor(Self::Index::one().shl(axis)))
     }
 
     #[inline]
-    fn sibling_or_same_on_axis(&self, axis: usize, direction: QueryDirection) -> Self {
+    fn sibling_on_axis(&self, axis: usize, direction: QueryDirection) -> Self {
         debug_assert!(axis < D, "Parameter 'axis' exceeds maximum");
-        let lower_axis_mask = DM::Dilated::one().shl(axis);
+        let lower_axis_mask = Self::Index::one().shl(axis);
         let search_mask = match direction {
             QueryDirection::Positive => lower_axis_mask,
-            QueryDirection::Negative => DM::Dilated::zero(),
+            QueryDirection::Negative => NumTraits::zero(),
         };
         Self(
             self.0
                 .bit_and(lower_axis_mask.bit_not())
                 .bit_or(search_mask),
         )
+    }
+
+    #[inline]
+    fn sibling_from_bits(&self, axis_bits: Self::Index) -> Self {
+        let lower_mask = Self::Index::one().shl(D).sub(NumTraits::one());
+        debug_assert!(axis_bits <= lower_mask, "Paremeter 'axis_bits' contains set bits in positions beyond D");
+        Self(self.0.bit_and(lower_mask.bit_not()).bit_or(axis_bits))
     }
 }
 
@@ -158,8 +169,20 @@ where
 
         let coord = DilatedInt::<DM>::new(self.0.shr(axis).bit_and(DM::DILATED_MAX));
         let coord = match direction {
-            QueryDirection::Positive => if coord.value() < DM::DILATED_MAX { Some(coord.add_one()) } else { None },
-            QueryDirection::Negative => if coord.value() > NumTraits::zero() { Some(coord.sub_one()) } else { None },
+            QueryDirection::Positive => {
+                if coord.value() < DM::DILATED_MAX {
+                    Some(coord.add_one())
+                } else {
+                    None
+                }
+            }
+            QueryDirection::Negative => {
+                if coord.value() > NumTraits::zero() {
+                    Some(coord.sub_one())
+                } else {
+                    None
+                }
+            }
         };
         coord.map(|coord| {
             let index = self.0.bit_and(DM::DILATED_MAX.shl(axis).bit_not());
@@ -183,7 +206,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::internal::tests::{test_curve, test_curve_siblings, test_curve_neighbours};
+    use crate::internal::tests::{test_curve, test_curve_neighbours, test_curve_siblings};
 
     macro_rules! morton_expand {
         ($t:ty, $d:literal) => {

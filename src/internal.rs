@@ -231,12 +231,12 @@ pub(crate) mod tests {
             }
         }
 
-        pub fn sibling_on_axis_is_correct()
+        pub fn sibling_on_axis_toggle_is_correct()
         where
             SFC: Siblings<D>,
             <SFC as SpaceFillingCurve<D>>::Coord: Debug,
         {
-            let num_indices: usize = SFC::INDEX_MAX.to_usize().min(MAX_TESTED_INDICES);
+            let num_indices: usize = SFC::INDEX_MAX.to_usize().min(MAX_TESTED_INDICES / D);
             for i in 0..num_indices {
                 // It's a shame that we have to rely on other SFC methods to test this trait... not sure of a better solution yet
                 let sfc = SFC::from_index(NumTraits::from_usize(i));
@@ -249,17 +249,17 @@ pub(crate) mod tests {
                         } else {
                             coords[axis].sub(NumTraits::one())
                         };
-                    assert_eq!(sfc.sibling_on_axis(axis).coords(), expected_coords);
+                    assert_eq!(sfc.sibling_on_axis_toggle(axis).coords(), expected_coords);
                 }
             }
         }
 
-        pub fn sibling_or_same_on_axis_is_correct()
+        pub fn sibling_on_axis_is_correct()
         where
             SFC: Siblings<D>,
             <SFC as SpaceFillingCurve<D>>::Coord: Debug,
         {
-            let num_indices: usize = SFC::INDEX_MAX.to_usize().min(MAX_TESTED_INDICES);
+            let num_indices: usize = SFC::INDEX_MAX.to_usize().min(MAX_TESTED_INDICES / D);
             for i in 0..num_indices {
                 // It's a shame that we have to rely on other SFC methods to test this trait... not sure of a better solution yet
                 let sfc = SFC::from_index(NumTraits::from_usize(i));
@@ -272,7 +272,7 @@ pub(crate) mod tests {
                         } else {
                             coords[axis]
                         };
-                    assert_eq!(sfc.sibling_or_same_on_axis(axis, QueryDirection::Positive).coords(), expected_coords);
+                    assert_eq!(sfc.sibling_on_axis(axis, QueryDirection::Positive).coords(), expected_coords);
 
                     expected_coords[axis] =
                         if coords[axis].bit_and(NumTraits::one()) == NumTraits::one() {
@@ -280,7 +280,44 @@ pub(crate) mod tests {
                         } else {
                             coords[axis]
                         };
-                    assert_eq!(sfc.sibling_or_same_on_axis(axis, QueryDirection::Negative).coords(), expected_coords);
+                    assert_eq!(sfc.sibling_on_axis(axis, QueryDirection::Negative).coords(), expected_coords);
+                }
+            }
+        }
+
+        pub fn sibling_from_bits_is_correct()
+        where
+            SFC: Siblings<D>,
+            <SFC as SpaceFillingCurve<D>>::Coord: Debug,
+        {
+            let num_siblings = 1 << D;
+            let num_indices: usize = SFC::INDEX_MAX.to_usize().min(MAX_TESTED_INDICES / num_siblings);
+            for i in 0..num_indices {
+                // It's a shame that we have to rely on other SFC methods to test this trait... not sure of a better solution yet
+                let sfc = SFC::from_index(NumTraits::from_usize(i));
+                let coords = sfc.coords();
+                for n in 0..num_siblings {
+                    let expected_coords = array_from_fn::<_, _, D>(|i| coords[i].bit_and(SFC::Coord::one().bit_not()).bit_or(NumTraits::from_usize((n >> i) & 0x1)));
+                    assert_eq!(sfc.sibling_from_bits(NumTraits::from_usize(n)).coords(), expected_coords)
+                }
+            }
+        }
+
+        pub fn sibling_on_axes_is_correct()
+        where
+            SFC: Siblings<D>,
+            <SFC as SpaceFillingCurve<D>>::Coord: Debug,
+        {
+            let num_siblings = 1 << D;
+            let num_indices: usize = SFC::INDEX_MAX.to_usize().min(MAX_TESTED_INDICES / num_siblings);
+            for i in 0..num_indices {
+                // It's a shame that we have to rely on other SFC methods to test this trait... not sure of a better solution yet
+                let sfc = SFC::from_index(NumTraits::from_usize(i));
+                let coords = sfc.coords();
+                for n in 0..num_siblings {
+                    let axes = array_from_fn::<_, _, D>(|i| if n >> i & 0x1 != 0 { QueryDirection::Positive } else { QueryDirection::Negative });
+                    let expected_coords = array_from_fn::<_, _, D>(|i| coords[i].bit_and(SFC::Coord::one().bit_not()).bit_or(NumTraits::from_usize((n >> i) & 0x1)));
+                    assert_eq!(sfc.sibling_on_axes(axes).coords(), expected_coords)
                 }
             }
         }
@@ -290,7 +327,7 @@ pub(crate) mod tests {
             SFC: Neighbours<D>,
             <SFC as SpaceFillingCurve<D>>::Coord: Debug,
         {
-            let num_indices: usize = SFC::INDEX_MAX.to_usize().min(MAX_TESTED_INDICES);
+            let num_indices: usize = SFC::INDEX_MAX.to_usize().min(MAX_TESTED_INDICES / D);
             for i in 0..num_indices {
                 // It's a shame that we have to rely on other SFC methods to test this trait... not sure of a better solution yet
                 let sfc = SFC::from_index(NumTraits::from_usize(i));
@@ -322,7 +359,7 @@ pub(crate) mod tests {
             SFC: Neighbours<D>,
             <SFC as SpaceFillingCurve<D>>::Coord: Debug,
         {
-            let num_indices: usize = SFC::INDEX_MAX.to_usize().min(MAX_TESTED_INDICES);
+            let num_indices: usize = SFC::INDEX_MAX.to_usize().min(MAX_TESTED_INDICES / D);
             for i in 0..num_indices {
                 // It's a shame that we have to rely on other SFC methods to test this trait... not sure of a better solution yet
                 let sfc = SFC::from_index(NumTraits::from_usize(i));
@@ -394,13 +431,23 @@ pub(crate) mod tests {
 
                     type TestedCurve = $curve!($t, $d);
                     #[test]
+                    fn sibling_on_axis_toggle_is_correct() {
+                        SpaceFillingCurveTester::<TestedCurve, $d>::sibling_on_axis_toggle_is_correct();
+                    }
+
+                    #[test]
                     fn sibling_on_axis_is_correct() {
                         SpaceFillingCurveTester::<TestedCurve, $d>::sibling_on_axis_is_correct();
                     }
 
                     #[test]
-                    fn sibling_or_same_on_axis_is_correct() {
-                        SpaceFillingCurveTester::<TestedCurve, $d>::sibling_or_same_on_axis_is_correct();
+                    fn sibling_from_bits_is_correct() {
+                        SpaceFillingCurveTester::<TestedCurve, $d>::sibling_from_bits_is_correct();
+                    }
+
+                    #[test]
+                    fn sibling_on_axes_is_correct() {
+                        SpaceFillingCurveTester::<TestedCurve, $d>::sibling_on_axes_is_correct();
                     }
                 }
             }
@@ -431,4 +478,6 @@ pub(crate) mod tests {
         )+}
     }
     pub(crate) use test_curve_neighbours;
+
+    use super::array_from_fn;
 }
