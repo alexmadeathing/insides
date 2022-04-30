@@ -35,7 +35,7 @@
 
 use dilate::*;
 
-use super::{Coord, SpaceFillingCurve, Index, Neighbours, QueryDirection, Siblings};
+use super::{CurveCoord, SpaceFillingCurve, CurveIndex, Neighbours, QueryDirection, Siblings};
 
 use crate::{internal::NumTraits, Morton};
 
@@ -574,15 +574,15 @@ pub struct Hilbert<DM, const D: usize>(pub(crate) DM::Dilated)
 where
     // When https://github.com/rust-lang/rust/issues/52662 is available, we can clean this up
     DM: DilationMethod,
-    DM::Undilated: Coord,
-    DM::Dilated: Index;
+    DM::Undilated: CurveCoord,
+    DM::Dilated: CurveIndex;
 
 impl<DM, const D: usize> Hilbert<DM, D>
 where
     // When https://github.com/rust-lang/rust/issues/52662 is available, we can clean this up
     DM: DilationMethod,
-    DM::Undilated: Coord,
-    DM::Dilated: Index,
+    DM::Undilated: CurveCoord,
+    DM::Dilated: CurveIndex,
 {
     #[inline]
     fn walk_static_lut<F>(index: DM::Dilated, min_order: usize, lower_mask: DM::Dilated, mut f: F) -> usize
@@ -781,6 +781,28 @@ where
                 println!("{:0>2}],", lut_data.0);
             }
             println!("];");
+            println!("pub const MORTON_LUT_D{}: [[u8; {}]; {}] = [", D, NUM_CHILDREN, NUM_TRANSFORMS);
+            for i in 0..num_transforms {
+                print!("    [");
+                for j in 0..(NUM_CHILDREN - 1) {
+                    let lut_data = transforms[i][j];
+                    print!("{:0>2}, ", lut_data.1);
+                }
+                let lut_data = transforms[i][NUM_CHILDREN - 1];
+                println!("{:0>2}],", lut_data.1);
+            }
+            println!("];");
+            println!("pub const HILBERT_LUT_D{}: [[u8; {}]; {}] = [", D, NUM_CHILDREN, NUM_TRANSFORMS);
+            for i in 0..num_transforms {
+                print!("    [");
+                for j in 0..(NUM_CHILDREN - 1) {
+                    let lut_data = transforms[i][j];
+                    print!("{:0>2}, ", lut_data.2);
+                }
+                let lut_data = transforms[i][NUM_CHILDREN - 1];
+                println!("{:0>2}],", lut_data.2);
+            }
+            println!("];");
         }
 
         /*
@@ -838,12 +860,14 @@ impl<DM, const D: usize> SpaceFillingCurve<D> for Hilbert<DM, D>
 where
     // When https://github.com/rust-lang/rust/issues/52662 is available, we can clean this up
     DM: DilationMethod,
-    DM::Undilated: Coord,
-    DM::Dilated: Index,
+    DM::Undilated: CurveCoord,
+    DM::Dilated: CurveIndex,
 {
     type Coord = DM::Undilated;
     type Index = DM::Dilated;
+    const COORD_BITS: usize = DM::UNDILATED_BITS;
     const COORD_MAX: Self::Coord = DM::UNDILATED_MAX;
+    const INDEX_BITS: usize = DM::DILATED_BITS;
     const INDEX_MAX: Self::Index = DM::DILATED_MASK;
     const D: usize = D;
 
@@ -919,10 +943,10 @@ impl<DM, const D: usize> Siblings<D> for Hilbert<DM, D>
 where
     // When https://github.com/rust-lang/rust/issues/52662 is available, we can clean this up
     DM: DilationMethod,
-    DM::Undilated: Coord,
-    DM::Dilated: Index,
+    DM::Undilated: CurveCoord,
+    DM::Dilated: CurveIndex,
 {
-    fn sibling_on_axis(&self, axis: usize) -> Self {
+    fn sibling_on_axis_toggle(&self, axis: usize) -> Self {
         todo!();
 //        let lower_mask = Self::Index::one().shl(D).sub(Self::Index::one());
 //        let morton_index = Morton::<DM, D>::from_coords(coords).index();
@@ -938,7 +962,11 @@ where
 //        Self(self.0.bit_and(lower_mask.bit_not()).bit_or(hilbert_partial))
     }
 
-    fn sibling_or_same_on_axis(&self, axis: usize, direction: QueryDirection) -> Self {
+    fn sibling_on_axis(&self, axis: usize, direction: QueryDirection) -> Self {
+        todo!()
+    }
+
+    fn sibling_from_bits(&self, axis_bits: Self::Index) -> Self {
         todo!()
     }
 }
