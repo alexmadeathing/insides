@@ -101,11 +101,14 @@ where
             *coords.iter().max().unwrap() <= Self::COORD_MAX,
             "Parameter 'coords' contains a value which exceeds maximum"
         );
-        let mut v = Self::Index::zero();
-        for (axis, coord) in coords.into_iter().enumerate() {
-            v = v.bit_or(DM::dilate(coord).value().shl(axis));
-        }
-        Self(v)
+        Self(
+            coords
+                .into_iter()
+                .enumerate()
+                .fold(Self::Index::zero(), |v, (i, c)| {
+                    v.bit_or(DM::dilate(c).value().shl(i))
+                }),
+        )
     }
 
     #[inline]
@@ -151,7 +154,10 @@ where
     #[inline]
     fn sibling_from_bits(&self, axis_bits: Self::Index) -> Self {
         let lower_mask = Self::Index::one().shl(D).sub(NumTraits::one());
-        debug_assert!(axis_bits <= lower_mask, "Paremeter 'axis_bits' contains set bits in positions beyond D");
+        debug_assert!(
+            axis_bits <= lower_mask,
+            "Paremeter 'axis_bits' contains set bits in positions beyond D"
+        );
         Self(self.0.bit_and(lower_mask.bit_not()).bit_or(axis_bits))
     }
 }

@@ -13,7 +13,7 @@ where
     })
 }
 
-pub trait NumTraits: dilate::DilatableType + Ord {
+pub trait NumTraits: Copy + Ord {
     // Add methods as needed
     fn zero() -> Self;
     fn one() -> Self;

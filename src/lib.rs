@@ -89,7 +89,7 @@ pub(crate) mod internal;
 use internal::NumTraits;
 
 /// Trait wrapper for coordinates
-pub trait CurveCoord: NumTraits {}
+pub trait CurveCoord: dilate::DilatableType + NumTraits {}
 
 impl CurveCoord for u8 {}
 impl CurveCoord for u16 {}
@@ -99,7 +99,7 @@ impl CurveCoord for u128 {}
 impl CurveCoord for usize {}
 
 /// Trait wrapper for indices
-pub trait CurveIndex: NumTraits {}
+pub trait CurveIndex: dilate::DilatableType + NumTraits {}
 
 impl CurveIndex for u8 {}
 impl CurveIndex for u16 {}
