@@ -213,9 +213,9 @@ dependencies = [
 
 [[package]]
 name = "dilate"
-version = "0.6.0"
+version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc433a5fe3673193ec047fe1f67eb98e05d9bab7496c6892859671fc4488548a"
+checksum = "38ad1521058992f3f41f1010454eb6e785653cb587ef2dc475ada10ca31a9ab5"
 
 [[package]]
 name = "dirs-next"
@@ -409,7 +409,7 @@ dependencies = [
 
 [[package]]
 name = "insides"
-version = "0.1.0"
+version = "0.1.2"
 dependencies = [
  "dilate",
 ]
