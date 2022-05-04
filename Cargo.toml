@@ -14,8 +14,8 @@ keywords = ["morton", "hilbert", "curve", "quadtree", "octree"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-default = ["lut_large_d2", "lut_large_d3", "lut_large_d4"]
-#default = []
+#default = ["lut_large_d2", "lut_large_d3", "lut_large_d4"]
+#default = ["lut_small_d2", "lut_small_d3", "lut_small_d4"]
 lut_small_d2 = []
 lut_small_d3 = []
 lut_small_d4 = []
