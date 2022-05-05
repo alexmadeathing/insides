@@ -33,7 +33,7 @@
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 // SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#![no_std]
+//#![no_std]
 #![warn(missing_docs)]
 #![warn(rustdoc::missing_doc_code_examples)]
 #![deny(rustdoc::invalid_rust_codeblocks)]
@@ -81,11 +81,15 @@ pub use dilate::*;
 pub mod morton;
 pub use crate::morton::Morton;
 
+/// Hilbert curve implementation
+pub mod hilbert;
+pub use crate::hilbert::Hilbert;
+
 pub(crate) mod internal;
 use internal::NumTraits;
 
 /// Trait wrapper for coordinates
-pub trait CurveCoord: NumTraits {}
+pub trait CurveCoord: dilate::DilatableType + NumTraits {}
 
 impl CurveCoord for u8 {}
 impl CurveCoord for u16 {}
@@ -95,7 +99,7 @@ impl CurveCoord for u128 {}
 impl CurveCoord for usize {}
 
 /// Trait wrapper for indices
-pub trait CurveIndex: NumTraits {}
+pub trait CurveIndex: dilate::DilatableType + NumTraits {}
 
 impl CurveIndex for u8 {}
 impl CurveIndex for u16 {}

@@ -12,6 +12,7 @@ const MAX_DEPTH: usize = 16;
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ArgEnum)]
 enum Curve {
     Morton,
+    Hilbert,
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Default)]
