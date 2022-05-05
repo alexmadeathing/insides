@@ -19,7 +19,7 @@ supporting manipulation methods.
 * Morton - A morton, or Z-order, curve implementation
 
 We currently only support Morton Encoding, but the interface will support
-other curve implementations, such as Hilbert - and we have plans to include them soon.
+other curve implementations, such as Hilbert - and we have a branch nearly ready for integration!
 
 # Features
 * High performance - Ready to use in performance sensitive contexts
