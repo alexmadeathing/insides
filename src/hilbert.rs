@@ -309,6 +309,11 @@ mod lut_large {
     }
 
     #[inline(always)]
+    fn lower_mask<T: NumTraits, const D: usize>() -> T {
+        (0..(stride::<D>() * D)).fold(T::zero(), |m, _| m.shl(1).bit_or(T::one()))
+    }
+
+    #[inline(always)]
     fn combined_transform_lut<T: NumTraits, const D: usize>(
         _transform: usize,
         _hilbert_partial: T,
@@ -359,52 +364,56 @@ mod lut_large {
     #[inline(always)]
     fn walk_combined_transforms<T: NumTraits, F, const D: usize>(
         index: T,
+        order: usize,
         mut f: F,
-    ) -> usize
+    ) -> T
     where
-        F: FnMut(usize, T, usize) -> T,
+        F: FnMut(usize, T) -> (T, T),
     {
         let stride_bits = stride::<D>() * D;
-        let lower_mask = (0..stride_bits).fold(T::zero(), |lm, _| lm.shl(1).bit_or(T::one()));
 
-        let order = ((T::bits() + stride_bits - 1) - index.lz()) / stride_bits;
+        let output = T::zero();
+        let transform = order * stride::<D>() % D;
+        let state = (output, transform);
 
-        let mut transform = order * stride::<D>() % D;
-        for shift in (0..order).rev().map(|i| i * stride_bits) {
-            let hilbert_partial = f(transform, index.shr(shift).bit_and(lower_mask), shift);
-            transform = combined_transform_lut::<_, D>(transform, hilbert_partial);
-        }
-        transform
+        (0..order).rev().map(|i| i * stride_bits).fold(state, |state, shift| {
+            let (hilbert_partial, out_partial) = f(state.1, index.shr(shift).bit_and(lower_mask::<T, D>()));
+            (state.0.bit_or(out_partial.shl(shift)), combined_transform_lut::<T, D>(state.1, hilbert_partial))
+        }).0
     }
 
     #[inline(always)]
     pub fn morton_to_hilbert<T: NumTraits, const D: usize>(morton_index: T) -> T {
         debug_assert!(has_lut::<D>());
-        let mut hilbert_index = T::zero();
-        walk_combined_transforms::<_, _, D>(
-            morton_index,
-            |transform, morton_partial, shift| {
-                let hilbert_partial = combined_hilbert_lut::<_, D>(transform, morton_partial);
-                hilbert_index = hilbert_index.bit_or(hilbert_partial.shl(shift));
-                hilbert_partial
+
+        let stride_bits = stride::<D>() * D;
+        let order = ((T::bits() + stride_bits - 1) - morton_index.lz()) / stride_bits;
+
+        T::from_inner(walk_combined_transforms::<T::Inner, _, D>(
+            morton_index.to_inner(),
+            order,
+            |transform, morton_partial| {
+                let hilbert_partial = combined_hilbert_lut::<T::Inner, D>(transform, morton_partial);
+                (hilbert_partial, hilbert_partial)
             },
-        );
-        hilbert_index
+        ))
     }
 
     #[inline(always)]
     pub fn hilbert_to_morton<T: NumTraits, const D: usize>(hilbert_index: T) -> T {
         debug_assert!(has_lut::<D>());
-        let mut morton_index = T::zero();
-        walk_combined_transforms::<_, _, D>(
-            hilbert_index,
-            |transform, hilbert_partial, shift| {
-                let morton_partial = combined_morton_lut::<_, D>(transform, hilbert_partial);
-                morton_index = morton_index.bit_or(morton_partial.shl(shift));
-                hilbert_partial
+
+        let stride_bits = stride::<D>() * D;
+        let order = ((T::bits() + stride_bits - 1) - hilbert_index.lz()) / stride_bits;
+
+        T::from_inner(walk_combined_transforms::<T::Inner, _, D>(
+            hilbert_index.to_inner(),
+            order,
+            |transform, hilbert_partial| {
+                let morton_partial = combined_morton_lut::<T::Inner, D>(transform, hilbert_partial);
+                (hilbert_partial, morton_partial)
             },
-        );
-        morton_index
+        ))
     }
 }
 
@@ -544,6 +553,37 @@ mod explicit {
 /// assert_eq!(location.index(), 36);
 /// assert_eq!(location.coords(), [1, 2, 3]);
 /// ```
+/// 
+/// # Performance
+/// The Hilbert implementation in insides is on a par with the current fastest
+/// library, [Fast Hilbert](https://crates.io/crates/fast_hilbert). More
+/// specifically, using the `lut_large_d2` feature, it out performs Fast
+/// Hilbert when converting a hilbert index to coordinates and Fast Hilbert
+/// slightly out performs insides when converting coordinates to a hilbert
+/// index.
+/// 
+/// A full breakdown of performance for each feature and similar libraries is shown below.
+/// 
+/// ### 2D Benchmark
+/// Benchmark performed on a 256x256 grid of 2D coordinates. Times are specific to my machine, your results may vary.
+/// 
+/// | Library                               | Index to Coords Time | Coords to Index Time | Notes        |
+/// | ------------------------------------- | -------------------- | -------------------- | ------------ |
+/// | insides (with feature `lut_large_d2`) | **337μs**            | 390μs                |              |
+/// | fast_hilbert                          | 510μs                | **348μs**            | 2D only      |
+/// | hilbert_2d                            | 533μs                | 697μs                | 2D only      |
+/// | hilbert_curve                         | 616μs                | 643μs                | 2D only      |
+/// | insides (with feature `lut_small_d2`) | 822μs                | 1.12ms               |              |
+/// | insides                               | 1.55ms               | 2.21ms               |              |
+/// | hilbert_index                         | 1.83ms               | 2.64ms               |              |
+/// | hilbert                               | 18.11ms              | 14.30ms              |              |
+///
+/// ### 3D Benchmark
+/// Benchmark performed on a 64x64x64 grid of 2D coordinates. Times are specific to my machine, your results may vary.
+///
+/// ### 4D Benchmark
+/// Benchmark performed on a 16x16x16x16 grid of 2D coordinates. Times are specific to my machine, your results may vary.
+/// 
 // Until we have complex generic constants, we have to pass D in here (needed by coords)
 // Waiting on: https://github.com/rust-lang/rust/issues/76560
 #[derive(Clone, Copy, Default, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]

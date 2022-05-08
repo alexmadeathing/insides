@@ -13,7 +13,50 @@ where
     })
 }
 
-pub trait NumTraits: Copy + Ord {
+// It's much faster to process numbers using the word size of the processor
+// This trait helps convert between outer type and a suitable word size inner type
+pub trait InnerRep {
+    type Inner: NumTraits;
+
+    fn from_inner(value: Self::Inner) -> Self;
+    fn to_inner(self) -> Self::Inner;
+}
+
+macro_rules! impl_inner_register {
+    ($t:ty, $reg:ty) => {
+        impl InnerRep for $t {
+            type Inner = $reg;
+
+            #[inline(always)]
+            fn from_inner(value: Self::Inner) -> Self { value as Self }
+        
+            #[inline(always)]
+            fn to_inner(self) -> Self::Inner { self as Self::Inner }
+        }
+    };
+}
+
+impl_inner_register!(u8, usize);
+
+impl_inner_register!(u16, usize);
+
+#[cfg(target_pointer_width = "16")]
+impl_inner_register!(u32, u32);
+
+#[cfg(any(target_pointer_width = "32", target_pointer_width = "64"))]
+impl_inner_register!(u32, usize);
+
+#[cfg(any(target_pointer_width = "16", target_pointer_width = "32"))]
+impl_inner_register!(u64, u64);
+
+#[cfg(target_pointer_width = "64")]
+impl_inner_register!(u64, usize);
+
+impl_inner_register!(u128, u128);
+
+impl_inner_register!(usize, usize);
+
+pub trait NumTraits: InnerRep + Copy + Ord {
     // Add methods as needed
     fn zero() -> Self;
     fn one() -> Self;
