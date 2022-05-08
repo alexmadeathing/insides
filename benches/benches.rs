@@ -18,12 +18,48 @@ macro_rules! impl_num_traits {
 
 impl_num_traits!(u8, u16, u32, u64, u128);
 
-pub fn criterion_benchmark(c: &mut Criterion) {
+fn benchmark_2d(c: &mut Criterion) {
     let coord_bits: usize = 8;
     let coord_length: usize = 1 << coord_bits;
     let index_length: usize = coord_length * coord_length;
 
-    c.bench_function("insides: 2d hilbert index to coords", |b| {
+    c.bench_function("2d hilbert index to coords: insides (u8)", |b| {
+        b.iter(|| {
+            for i in 0..index_length {
+                black_box(Hilbert::<Expand<u8, 2>, 2>::from_index(black_box(i as u16)).coords());
+            }
+        })
+    });
+
+    c.bench_function("2d hilbert coords to index: insides (u8)", |b| {
+        b.iter(|| {
+            for x in 0..coord_length {
+                for y in 0..coord_length {
+                    black_box(Hilbert::<Expand<u8, 2>, 2>::from_coords(black_box([x as u8, y as u8])).index());
+                }
+            }
+        })
+    });
+
+    c.bench_function("2d hilbert index to coords: insides (u16)", |b| {
+        b.iter(|| {
+            for i in 0..index_length {
+                black_box(Hilbert::<Expand<u16, 2>, 2>::from_index(black_box(i as u32)).coords());
+            }
+        })
+    });
+
+    c.bench_function("2d hilbert coords to index: insides (u16)", |b| {
+        b.iter(|| {
+            for x in 0..coord_length {
+                for y in 0..coord_length {
+                    black_box(Hilbert::<Expand<u16, 2>, 2>::from_coords(black_box([x as u16, y as u16])).index());
+                }
+            }
+        })
+    });
+
+    c.bench_function("2d hilbert index to coords: insides (u32)", |b| {
         b.iter(|| {
             for i in 0..index_length {
                 black_box(Hilbert::<Expand<u32, 2>, 2>::from_index(black_box(i as u64)).coords());
@@ -31,49 +67,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         })
     });
 
-    c.bench_function("fast_hilbert: 2d hilbert index to coords", |b| {
-        b.iter(|| {
-            for i in 0..index_length {
-                black_box(fast_hilbert::h2xy::<u32>(black_box(i as u64)));
-            }
-        })
-    });
-
-    c.bench_function("hilbert_curve: 2d hilbert index to coords", |b| {
-        b.iter(|| {
-            for i in 0..index_length {
-                black_box(hilbert_curve::convert_1d_to_2d(black_box(i), black_box(coord_length)));
-            }
-        })
-    });
-
-    c.bench_function("hilbert_2d: 2d hilbert index to coords", |b| {
-        b.iter(|| {
-            for i in 0..index_length {
-                black_box(hilbert_2d::h2xy_discrete(black_box(i), black_box(coord_bits), black_box(hilbert_2d::Variant::Hilbert)));
-            }
-        })
-    });
-
-    // This is causing issues with rust-analyser
-    // It can be uncommented when performing benchmarks, but should be commented otherwise
-/*    c.bench_function("hilbert_index: 2d hilbert index to coords", |b| {
-        b.iter(|| {
-            for i in 0..index_length {
-                black_box(hilbert_index::FromHilbertIndex::<2>::from_hilbert_index(black_box(&i), black_box(coord_bits)));
-            }
-        })
-    });*/
-
-    c.bench_function("hilbert: 2d hilbert index to coords", |b| {
-        b.iter(|| {
-            for i in 0..index_length {
-                black_box(hilbert::Point::new_from_hilbert_index(0, &black_box(num::BigUint::from(i)), black_box(coord_bits), black_box(2)));
-            }
-        })
-    });
-
-    c.bench_function("insides: 2d hilbert coords to index", |b| {
+    c.bench_function("2d hilbert coords to index: insides (u32)", |b| {
         b.iter(|| {
             for x in 0..coord_length {
                 for y in 0..coord_length {
@@ -83,7 +77,69 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         })
     });
 
-    c.bench_function("fast_hilbert: 2d hilbert coords to index", |b| {
+    c.bench_function("2d hilbert index to coords: insides (u64)", |b| {
+        b.iter(|| {
+            for i in 0..index_length {
+                black_box(Hilbert::<Expand<u64, 2>, 2>::from_index(black_box(i as u128)).coords());
+            }
+        })
+    });
+
+    c.bench_function("2d hilbert coords to index: insides (u64)", |b| {
+        b.iter(|| {
+            for x in 0..coord_length {
+                for y in 0..coord_length {
+                    black_box(Hilbert::<Expand<u64, 2>, 2>::from_coords(black_box([x as u64, y as u64])).index());
+                }
+            }
+        })
+    });
+
+    c.bench_function("2d hilbert index to coords: fast_hilbert (u8)", |b| {
+        b.iter(|| {
+            for i in 0..index_length {
+                black_box(fast_hilbert::h2xy::<u8>(black_box(i as u16)));
+            }
+        })
+    });
+
+    c.bench_function("2d hilbert coords to index: fast_hilbert (u8)", |b| {
+        b.iter(|| {
+            for x in 0..coord_length {
+                for y in 0..coord_length {
+                    black_box(fast_hilbert::xy2h::<u8>(black_box(x as u8), black_box(y as u8)));
+                }
+            }
+        })
+    });
+
+    c.bench_function("2d hilbert index to coords: fast_hilbert (u16)", |b| {
+        b.iter(|| {
+            for i in 0..index_length {
+                black_box(fast_hilbert::h2xy::<u16>(black_box(i as u32)));
+            }
+        })
+    });
+
+    c.bench_function("2d hilbert coords to index: fast_hilbert (u16)", |b| {
+        b.iter(|| {
+            for x in 0..coord_length {
+                for y in 0..coord_length {
+                    black_box(fast_hilbert::xy2h::<u16>(black_box(x as u16), black_box(y as u16)));
+                }
+            }
+        })
+    });
+
+    c.bench_function("2d hilbert index to coords: fast_hilbert (u32)", |b| {
+        b.iter(|| {
+            for i in 0..index_length {
+                black_box(fast_hilbert::h2xy::<u32>(black_box(i as u64)));
+            }
+        })
+    });
+
+    c.bench_function("2d hilbert coords to index: fast_hilbert (u32)", |b| {
         b.iter(|| {
             for x in 0..coord_length {
                 for y in 0..coord_length {
@@ -93,7 +149,33 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         })
     });
 
-    c.bench_function("hilbert_curve: 2d hilbert coords to index", |b| {
+    c.bench_function("2d hilbert index to coords: fast_hilbert (u64)", |b| {
+        b.iter(|| {
+            for i in 0..index_length {
+                black_box(fast_hilbert::h2xy::<u64>(black_box(i as u128)));
+            }
+        })
+    });
+
+    c.bench_function("2d hilbert coords to index: fast_hilbert (u64)", |b| {
+        b.iter(|| {
+            for x in 0..coord_length {
+                for y in 0..coord_length {
+                    black_box(fast_hilbert::xy2h::<u64>(black_box(x as u64), black_box(y as u64)));
+                }
+            }
+        })
+    });
+
+    c.bench_function("2d hilbert index to coords: hilbert_curve", |b| {
+        b.iter(|| {
+            for i in 0..index_length {
+                black_box(hilbert_curve::convert_1d_to_2d(black_box(i), black_box(coord_length)));
+            }
+        })
+    });
+
+    c.bench_function("2d hilbert coords to index: hilbert_curve", |b| {
         b.iter(|| {
             for x in 0..coord_length {
                 for y in 0..coord_length {
@@ -103,7 +185,15 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         })
     });
 
-    c.bench_function("hilbert_2d: 2d hilbert coords to index", |b| {
+    c.bench_function("2d hilbert index to coords: hilbert_2d", |b| {
+        b.iter(|| {
+            for i in 0..index_length {
+                black_box(hilbert_2d::h2xy_discrete(black_box(i), black_box(coord_bits), black_box(hilbert_2d::Variant::Hilbert)));
+            }
+        })
+    });
+
+    c.bench_function("2d hilbert coords to index: hilbert_2d", |b| {
         b.iter(|| {
             for x in 0..coord_length {
                 for y in 0..coord_length {
@@ -113,7 +203,17 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         })
     });
 
-    c.bench_function("hilbert_index: 2d hilbert coords to index", |b| {
+    // This is causing issues with rust-analyser
+    // It can be uncommented when performing benchmarks, but should be commented otherwise
+    c.bench_function("2d hilbert index to coords: hilbert_index", |b| {
+        b.iter(|| {
+            for i in 0..index_length {
+                black_box(hilbert_index::FromHilbertIndex::<2>::from_hilbert_index(black_box(&i), black_box(coord_bits)));
+            }
+        })
+    });
+
+    c.bench_function("2d hilbert coords to index: hilbert_index", |b| {
         b.iter(|| {
             for x in 0..coord_length {
                 for y in 0..coord_length {
@@ -123,7 +223,15 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         })
     });
 
-    c.bench_function("hilbert: 2d hilbert coords to index", |b| {
+    c.bench_function("2d hilbert index to coords: hilbert", |b| {
+        b.iter(|| {
+            for i in 0..index_length {
+                black_box(hilbert::Point::new_from_hilbert_index(0, &black_box(num::BigUint::from(i)), black_box(coord_bits), black_box(2)));
+            }
+        })
+    });
+
+    c.bench_function("2d hilbert coords to index: hilbert", |b| {
         b.iter(|| {
             for x in 0..coord_length {
                 for y in 0..coord_length {
@@ -132,6 +240,79 @@ pub fn criterion_benchmark(c: &mut Criterion) {
             }
         })
     });
+}
+
+fn benchmark_3d(c: &mut Criterion) {
+    let coord_bits: usize = 6;
+    let coord_length: usize = 1 << coord_bits;
+    let index_length: usize = coord_length * coord_length * coord_length;
+
+    c.bench_function("3d hilbert index to coords: insides", |b| {
+        b.iter(|| {
+            for i in 0..index_length {
+                black_box(Hilbert::<Expand<u8, 3>, 3>::from_index(black_box(i as u32)).coords());
+            }
+        })
+    });
+
+    // This is causing issues with rust-analyser
+    // It can be uncommented when performing benchmarks, but should be commented otherwise
+    c.bench_function("3d hilbert index to coords: hilbert_index", |b| {
+        b.iter(|| {
+            for i in 0..index_length {
+                black_box(hilbert_index::FromHilbertIndex::<3>::from_hilbert_index(black_box(&i), black_box(coord_bits)));
+            }
+        })
+    });
+
+    c.bench_function("3d hilbert index to coords: hilbert", |b| {
+        b.iter(|| {
+            for i in 0..index_length {
+                black_box(hilbert::Point::new_from_hilbert_index(0, &black_box(num::BigUint::from(i)), black_box(coord_bits), black_box(3)));
+            }
+        })
+    });
+
+    c.bench_function("3d hilbert coords to index: insides", |b| {
+        b.iter(|| {
+            for x in 0..coord_length {
+                for y in 0..coord_length {
+                    for z in 0..coord_length {
+                        black_box(Hilbert::<Expand<u8, 3>, 3>::from_coords(black_box([x as u8, y as u8, z as u8])).index());
+                    }
+                }
+            }
+        })
+    });
+
+    c.bench_function("3d hilbert coords to index: hilbert_index", |b| {
+        b.iter(|| {
+            for x in 0..coord_length {
+                for y in 0..coord_length {
+                    for z in 0..coord_length {
+                        black_box(hilbert_index::ToHilbertIndex::to_hilbert_index(&black_box([x, y, z]), black_box(coord_bits)));
+                    }
+                }
+            }
+        })
+    });
+
+    c.bench_function("3d hilbert coords to index: hilbert", |b| {
+        b.iter(|| {
+            for x in 0..coord_length {
+                for y in 0..coord_length {
+                    for z in 0..coord_length {
+                        black_box(black_box(hilbert::Point::new(0, &[x as u32, y as u32, z as u32])).hilbert_transform(black_box(coord_bits)));
+                    }
+                }
+            }
+        })
+    });
+}
+
+pub fn criterion_benchmark(c: &mut Criterion) {
+    benchmark_2d(c);
+//    benchmark_3d(c);
 }
 
 criterion_group!(
