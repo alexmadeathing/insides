@@ -44,7 +44,7 @@ mod lut_small {
 
     #[cfg(feature = "lut_small_d2")]
     mod d2 {
-        pub const AXIS_TX_INTO_SHL_LUT: [[u8; 4]; 2] = [
+        pub const FLIP_TX_INTO_SHL_LUT: [[u8; 4]; 2] = [
             [00, 00, 00, 03, ],
             [00, 00, 00, 03, ],
         ];
@@ -59,7 +59,7 @@ mod lut_small {
             [00, 02, 03, 01, ],
         ];
 
-        pub const ROTATION_INCREMENT_LUT: [[u8; 4]; 2] = [
+        pub const ROTATION_LUT: [[u8; 4]; 2] = [
             [01, 00, 00, 01, ],
             [00, 01, 01, 00, ],
         ];
@@ -67,7 +67,7 @@ mod lut_small {
 
     #[cfg(feature = "lut_small_d3")]
     mod d3 {
-        pub const AXIS_TX_INTO_SHL_LUT: [[u8; 8]; 3] = [
+        pub const FLIP_TX_INTO_SHL_LUT: [[u8; 8]; 3] = [
             [00, 00, 00, 03, 03, 06, 06, 05, ],
             [00, 00, 00, 06, 06, 05, 05, 03, ],
             [00, 00, 00, 05, 05, 03, 03, 06, ],
@@ -85,7 +85,7 @@ mod lut_small {
             [00, 04, 05, 01, 03, 07, 06, 02, ],
         ];
 
-        pub const ROTATION_INCREMENT_LUT: [[u8; 8]; 3] = [
+        pub const ROTATION_LUT: [[u8; 8]; 3] = [
             [01, 02, 02, 00, 00, 02, 02, 01, ],
             [02, 00, 00, 01, 01, 00, 00, 02, ],
             [00, 01, 01, 02, 02, 01, 01, 00, ],
@@ -94,7 +94,7 @@ mod lut_small {
 
     #[cfg(feature = "lut_small_d4")]
     mod d4 {
-        pub const AXIS_TX_INTO_SHL_LUT: [[u8; 16]; 4] = [
+        pub const FLIP_TX_INTO_SHL_LUT: [[u8; 16]; 4] = [
             [00, 00, 00, 03, 03, 06, 06, 05, 05, 12, 12, 15, 15, 10, 10, 09, ],
             [00, 00, 00, 06, 06, 12, 12, 10, 10, 09, 09, 15, 15, 05, 05, 03, ],
             [00, 00, 00, 12, 12, 09, 09, 05, 05, 03, 03, 15, 15, 10, 10, 06, ],
@@ -115,7 +115,7 @@ mod lut_small {
             [00, 08, 09, 01, 03, 11, 10, 02, 06, 14, 15, 07, 05, 13, 12, 04, ],
         ];
 
-        pub const ROTATION_INCREMENT_LUT: [[u8; 16]; 4] = [
+        pub const ROTATION_LUT: [[u8; 16]; 4] = [
             [01, 02, 02, 03, 03, 02, 02, 00, 00, 02, 02, 03, 03, 02, 02, 01, ],
             [02, 03, 03, 00, 00, 03, 03, 01, 01, 03, 03, 00, 00, 03, 03, 02, ],
             [03, 00, 00, 01, 01, 00, 00, 02, 02, 00, 00, 01, 01, 00, 00, 03, ],
@@ -137,53 +137,53 @@ mod lut_small {
     }
 
     #[inline(always)]
-    fn axis_tx_into_shl_lut<T: NumTraits, const D: usize>(_index: T, _rotate_amount: usize) -> T {
+    fn flip_tx_into_shl_lut<T: NumTraits, const D: usize>(_index: T, _rotation: usize) -> T {
         match D {
             #[cfg(feature = "lut_small_d2")]
-            2 => T::from_u8(d2::AXIS_TX_INTO_SHL_LUT[_rotate_amount][_index.to_usize()]),
+            2 => T::from_u8(d2::FLIP_TX_INTO_SHL_LUT[_rotation][_index.to_usize()]),
             #[cfg(feature = "lut_small_d3")]
-            3 => T::from_u8(d3::AXIS_TX_INTO_SHL_LUT[_rotate_amount][_index.to_usize()]),
+            3 => T::from_u8(d3::FLIP_TX_INTO_SHL_LUT[_rotation][_index.to_usize()]),
             #[cfg(feature = "lut_small_d4")]
-            4 => T::from_u8(d4::AXIS_TX_INTO_SHL_LUT[_rotate_amount][_index.to_usize()]),
+            4 => T::from_u8(d4::FLIP_TX_INTO_SHL_LUT[_rotation][_index.to_usize()]),
             _ => unimplemented!(),
         }
     }
 
     #[inline(always)]
-    fn shr_into_gray_inv_lut<T: NumTraits, const D: usize>(_index: T, _rotate_amount: usize) -> T {
+    fn shr_into_gray_inv_lut<T: NumTraits, const D: usize>(_index: T, _rotation: usize) -> T {
         match D {
             #[cfg(feature = "lut_small_d2")]
-            2 => T::from_u8(d2::SHR_INTO_GRAY_INV_LUT[_rotate_amount][_index.to_usize()]),
+            2 => T::from_u8(d2::SHR_INTO_GRAY_INV_LUT[_rotation][_index.to_usize()]),
             #[cfg(feature = "lut_small_d3")]
-            3 => T::from_u8(d3::SHR_INTO_GRAY_INV_LUT[_rotate_amount][_index.to_usize()]),
+            3 => T::from_u8(d3::SHR_INTO_GRAY_INV_LUT[_rotation][_index.to_usize()]),
             #[cfg(feature = "lut_small_d4")]
-            4 => T::from_u8(d4::SHR_INTO_GRAY_INV_LUT[_rotate_amount][_index.to_usize()]),
+            4 => T::from_u8(d4::SHR_INTO_GRAY_INV_LUT[_rotation][_index.to_usize()]),
             _ => unimplemented!(),
         }
     }
 
     #[inline(always)]
-    fn gray_into_shl_lut<T: NumTraits, const D: usize>(_index: T, _rotate_amount: usize) -> T {
+    fn gray_into_shl_lut<T: NumTraits, const D: usize>(_index: T, _rotation: usize) -> T {
         match D {
             #[cfg(feature = "lut_small_d2")]
-            2 => T::from_u8(d2::GRAY_INTO_SHL_LUT[_rotate_amount][_index.to_usize()]),
+            2 => T::from_u8(d2::GRAY_INTO_SHL_LUT[_rotation][_index.to_usize()]),
             #[cfg(feature = "lut_small_d3")]
-            3 => T::from_u8(d3::GRAY_INTO_SHL_LUT[_rotate_amount][_index.to_usize()]),
+            3 => T::from_u8(d3::GRAY_INTO_SHL_LUT[_rotation][_index.to_usize()]),
             #[cfg(feature = "lut_small_d4")]
-            4 => T::from_u8(d4::GRAY_INTO_SHL_LUT[_rotate_amount][_index.to_usize()]),
+            4 => T::from_u8(d4::GRAY_INTO_SHL_LUT[_rotation][_index.to_usize()]),
             _ => unimplemented!(),
         }
     }
 
     #[inline(always)]
-    fn rotation_increment_lut<T: NumTraits, const D: usize>(_index: T, _rotate_amount: usize) -> usize {
+    fn rotation_lut<T: NumTraits, const D: usize>(_index: T, _rotation: usize) -> usize {
         match D {
             #[cfg(feature = "lut_small_d2")]
-            2 => d2::ROTATION_INCREMENT_LUT[_rotate_amount][_index.to_usize()] as usize,
+            2 => d2::ROTATION_LUT[_rotation][_index.to_usize()] as usize,
             #[cfg(feature = "lut_small_d3")]
-            3 => d3::ROTATION_INCREMENT_LUT[_rotate_amount][_index.to_usize()] as usize,
+            3 => d3::ROTATION_LUT[_rotation][_index.to_usize()] as usize,
             #[cfg(feature = "lut_small_d4")]
-            4 => d4::ROTATION_INCREMENT_LUT[_rotate_amount][_index.to_usize()] as usize,
+            4 => d4::ROTATION_LUT[_rotation][_index.to_usize()] as usize,
             _ => unimplemented!(),
         }
     }
@@ -200,20 +200,20 @@ mod lut_small {
         let lower_mask = T::one().shl(D).sub(T::one());
 
         // We iterate in reverse because higher orders affect the rotation of lower orders
-        let mut flip_axes = T::zero();
-        let mut rotate_amount = (D - 1) - (order % D);
+        let mut flip = T::zero();
+        let mut rotation = (D - 1) - (order % D);
         for shift in (0..order).rev().map(|i| i * D) {
             // Extract a portion of the index
             let index_partial = index.shr(shift).bit_and(lower_mask);
 
             // Context specific code generates the hilbert partial
-            let hilbert_partial = f(index_partial, shift, rotate_amount, flip_axes);
+            let hilbert_partial = f(index_partial, shift, rotation, flip);
 
             // Calculate the next axis flip flags and rotation amounts resulting from this order
-            flip_axes = flip_axes.bit_xor(axis_tx_into_shl_lut::<_, D>(hilbert_partial, rotate_amount));
-            rotate_amount = rotation_increment_lut::<_, D>(hilbert_partial, rotate_amount);
+            flip = flip.bit_xor(flip_tx_into_shl_lut::<_, D>(hilbert_partial, rotation));
+            rotation = rotation_lut::<_, D>(hilbert_partial, rotation);
         }
-        (rotate_amount, flip_axes)
+        (rotation, flip)
     }
 
     #[inline(always)]
@@ -226,8 +226,8 @@ mod lut_small {
         walk_transforms::<T, _, D>(
             morton_index,
             order,
-            |morton_partial, shift, rotate_amount, flip_axes| {
-                let hilbert_partial = shr_into_gray_inv_lut::<_, D>(flip_axes.bit_xor(morton_partial), rotate_amount);
+            |morton_partial, shift, rotation, flip| {
+                let hilbert_partial = shr_into_gray_inv_lut::<_, D>(flip.bit_xor(morton_partial), rotation);
                 hilbert_index = hilbert_index.bit_or(hilbert_partial.shl(shift));
                 hilbert_partial
             },
@@ -245,8 +245,8 @@ mod lut_small {
         walk_transforms::<T, _, D>(
             hilbert_index,
             order,
-            |hilbert_partial, shift, rotate_amount, flip_axes| {
-                let morton_partial = flip_axes.bit_xor(gray_into_shl_lut::<_, D>(hilbert_partial, rotate_amount));
+            |hilbert_partial, shift, rotation, flip| {
+                let morton_partial = flip.bit_xor(gray_into_shl_lut::<_, D>(hilbert_partial, rotation));
                 morton_index = morton_index.bit_or(morton_partial.shl(shift));
                 hilbert_partial
             },
@@ -454,12 +454,22 @@ mod explicit {
     }
     
     #[inline(always)]
-    pub fn axis_transform<T: NumTraits>(index: T) -> T {
+    pub fn flip_transform<T: NumTraits>(index: T) -> T {
         if index == T::zero() {
             T::zero()
         } else {
             gray(index.sub(T::one()).bit_and(T::bit_not(T::one())))
         }
+    }
+
+    #[inline(always)]
+    pub fn next_flip<T: NumTraits, const D: usize>(index: T, flip: T, rotation: usize) -> T {
+        flip.bit_xor(shl_cyclic::<_, D>(flip_transform(index), rotation))
+    }
+
+    #[inline(always)]
+    pub fn next_rotation<T: NumTraits, const D: usize>(index: T, rotation: usize) -> usize {
+        (rotation_transform(index.to_usize()) + rotation + 1) % D
     }
 
     #[inline(always)]
@@ -472,31 +482,17 @@ mod explicit {
         F: FnMut(T, usize, usize, T) -> T,
     {
         let lower_mask = T::one().shl(D).sub(T::one());
-        // A subset of highest bits of index will be 0, therefore, we can skip a certain
-        // number of iterations in the following loop. Note that skipping iterations
-        // still requires us to rotate the pattern as if we had iterated all orders, see
-        // rotate_amount below.
         let order = (T::bits() - index.lz() + D - 1) / D;
 
-        // We iterate in reverse because higher orders affect the rotation of lower orders
-        let mut flip_axes = T::zero();
-        let mut rotate_amount = (D - 1) - (order % D);
+        let mut flip = T::zero();
+        let mut rotation = (D - 1) - (order % D);
         for shift in (min_order..order).rev().map(|i| i * D) {
-            // Extract a portion of the index
             let index_partial = index.shr(shift).bit_and(lower_mask);
-
-            // Context specific code generates the hilbert partial
-            let hilbert_partial = f(index_partial, shift, rotate_amount, flip_axes);
-
-            // Calculate the next axis flip flags and rotation amounts resulting from this order
-            flip_axes = flip_axes.bit_xor(shl_cyclic::<_, D>(
-                axis_transform(hilbert_partial),
-                rotate_amount,
-            ));
-            rotate_amount =
-                (rotation_transform(hilbert_partial.to_usize()) + rotate_amount + 1) % D;
+            let hilbert_partial = f(index_partial, shift, rotation, flip);
+            flip = next_flip::<T, D>(hilbert_partial, flip, rotation);
+            rotation = next_rotation::<T, D>(hilbert_partial, rotation);
         }
-        (rotate_amount, flip_axes)
+        (rotation, flip)
     }
 
     #[inline(always)]
@@ -505,10 +501,10 @@ mod explicit {
         walk_transforms::<_, _, D>(
             morton_index,
             0,
-            |morton_partial, shift, rotate_amount, flip_axes| {
+            |morton_partial, shift, rotation, flip| {
                 let hilbert_partial = gray_inverse::<_, D>(shr_cyclic::<_, D>(
-                    flip_axes.bit_xor(morton_partial),
-                    rotate_amount,
+                    flip.bit_xor(morton_partial),
+                    rotation,
                 ));
                 hilbert_index = hilbert_index.bit_or(hilbert_partial.shl(shift));
                 hilbert_partial
@@ -523,10 +519,10 @@ mod explicit {
         walk_transforms::<_, _, D>(
             hilbert_index,
             0,
-            |hilbert_partial, shift, rotate_amount, flip_axes| {
-                let morton_partial = flip_axes.bit_xor(shl_cyclic::<_, D>(
+            |hilbert_partial, shift, rotation, flip| {
+                let morton_partial = flip.bit_xor(shl_cyclic::<_, D>(
                     gray(hilbert_partial),
-                    rotate_amount,
+                    rotation,
                 ));
                 morton_index = morton_index.bit_or(morton_partial.shl(shift));
                 hilbert_partial
@@ -564,11 +560,36 @@ fn hilbert_to_morton<T: NumTraits, const D: usize>(hilbert_index: T) -> T {
 
 /// A Hilbert encoded space filling curve implementation
 ///
-/// Hilbert encoding is a space filling algorithm which maps a multidimensional
+/// [Hilbert encoding](https://en.wikipedia.org/wiki/Hilbert_curve)
+/// is a fractal space filling algorithm which maps a multidimensional
 /// set of coordinates to one dimension and vice versa.
-/// 
-/// TODO Write more
 ///
+/// Where the Morton curve features better CPU performance, the Hilbert curve
+/// offers excellent spatial coherence, making it an ideal choice for memory
+/// access bound applications.
+/// 
+/// # Self Similarity
+/// The Hilbert implementation featured in this crate is self-similar
+/// in that lower magnitude indices will always reference the same
+/// coordinates regardless how deep the curve is iterated. There is no
+/// "depth" or "level" parameter.
+/// 
+/// # Lookup Tables
+/// Two lookup table (LUT) options are provided, which greatly improve
+/// performance (for dimensions 2, 3, and 4). These may be toggled on or off
+/// using the cargo features:
+/// 
+/// `lut_small_d2`, `lut_small_d3`, `lut_small_d4`
+/// 
+/// ...and...
+/// 
+/// `lut_large_d2`, `lut_large_d3`, `lut_large_d4`.
+/// 
+/// The `lut_large_*`
+/// variants favour cpu performance over memory performance, the `lut_small_*`
+/// variants strike a balance between CPU and memory performance, and omitting
+/// cargo features will use no LUT at all. See Performance section below.
+/// 
 /// # Examples
 /// ```rust
 /// use insides::*;
@@ -581,23 +602,18 @@ fn hilbert_to_morton<T: NumTraits, const D: usize>(hilbert_index: T) -> T {
 /// 
 /// # Performance
 /// When using the `lut_large_d2` feature, the Hilbert implementation in
-/// insides is on a par with the current fastest library,
+/// insides is on a par with the current fastest crate,
 /// [Fast Hilbert](https://crates.io/crates/fast_hilbert).
 /// 
 /// A full breakdown of performance for each feature and similar libraries is
-/// shown below. Tests were performed using all types supported by each library
+/// shown below. Tests were performed using all types supported by each crate
 /// and times averaged. Times are specific to the machine running the benchmarks;
 /// your results may vary.
-/// 
-/// Please also note that at these extremely small timeframes, subtle differences
-/// in the way the compiler optimises the code can lead to relatively large
-/// fuctuations in the results (this is why we say that insides is "on a par" with
-/// Fast Hilbert, and not categorically faster or slower).
 /// 
 /// ### 2D Benchmark
 /// Benchmark performed on a 256x256 grid of 2D coordinates.
 /// 
-/// | Library                               | Index to Coords Time | Coords to Index Time |
+/// | Crate (and Features)                  | Index to Coords Time | Coords to Index Time |
 /// | ------------------------------------- | -------------------- | -------------------- |
 /// | insides (with feature `lut_large_d2`) | **373μs**            | 416μs                |
 /// | fast_hilbert                          | 462μs                | **405μs**            |
@@ -611,10 +627,10 @@ fn hilbert_to_morton<T: NumTraits, const D: usize>(hilbert_index: T) -> T {
 /// ### 3D Benchmark
 /// Benchmark performed on a 32x32x32 grid of 3D coordinates (performed twice to balance with other tables).
 /// 
-/// | Library                               | Index to Coords Time | Coords to Index Time |
+/// | Crate (and Features)                  | Index to Coords Time | Coords to Index Time |
 /// | ------------------------------------- | -------------------- | -------------------- |
-/// | insides (with feature `lut_large_d2`) | **600μs**            | **705μs**            |
-/// | insides (with feature `lut_small_d2`) | 844μs                | 1.1ms                |
+/// | insides (with feature `lut_large_d3`) | **600μs**            | **705μs**            |
+/// | insides (with feature `lut_small_d3`) | 844μs                | 1.1ms                |
 /// | insides                               | 1.2ms                | 2.0ms                |
 /// | hilbert_index                         | 1.4ms                | 1.9ms                |
 /// | hilbert                               | 17.1ms               | 14.3ms               |
@@ -622,10 +638,10 @@ fn hilbert_to_morton<T: NumTraits, const D: usize>(hilbert_index: T) -> T {
 /// ### 4D Benchmark
 /// Benchmark performed on a 16x16x16x16 grid of 4D coordinates.
 /// 
-/// | Library                               | Index to Coords Time | Coords to Index Time |
+/// | Crate (and Features)                  | Index to Coords Time | Coords to Index Time |
 /// | ------------------------------------- | -------------------- | -------------------- |
-/// | insides (with feature `lut_large_d2`) | **394μs**            | **470μs**            |
-/// | insides (with feature `lut_small_d2`) | 656μs                | 798μs                |
+/// | insides (with feature `lut_large_d4`) | **394μs**            | **470μs**            |
+/// | insides (with feature `lut_small_d4`) | 656μs                | 798μs                |
 /// | hilbert_index                         | 1.1ms                | 1.1ms                |
 /// | insides                               | 955μs                | 1.5ms                |
 /// | hilbert                               | 17.4ms               | 14.5ms               |
@@ -699,18 +715,6 @@ mod tests {
 
     use crate::internal::tests::test_curve;
 
-    macro_rules! hilbert_expand {
-        ($t:ty, $d:literal) => {
-            Hilbert::<Expand<$t, $d>, $d>
-        };
-    }
-
-    macro_rules! hilbert_fixed {
-        ($t:ty, $d:literal) => {
-            Hilbert::<Fixed<$t, $d>, $d>
-        };
-    }
-
     #[test]
     #[ignore]
     fn generate_lut() {
@@ -744,15 +748,15 @@ mod tests {
         }
         println!("    ];\n");
 
-        println!("    pub const AXIS_TX_INTO_SHL_LUT: [[u8; {num_elems}]; {D}] = [");
+        println!("    pub const FLIP_TX_INTO_SHL_LUT: [[u8; {num_elems}]; {D}] = [");
         for r in 0..D {
             print!("        [");
-            (0..num_elems).into_iter().for_each(|i| print!("{:0>2}, ", explicit::shl_cyclic::<_, D>(explicit::axis_transform(i), r)));
+            (0..num_elems).into_iter().for_each(|i| print!("{:0>2}, ", explicit::shl_cyclic::<_, D>(explicit::flip_transform(i), r)));
             println!("],");
         }
         println!("    ];\n");
 
-        println!("    pub const ROTATION_INCREMENT_LUT: [[u8; {num_elems}]; {D}] = [");
+        println!("    pub const ROTATION_LUT: [[u8; {num_elems}]; {D}] = [");
         for r in 0..D {
             print!("        [");
             (0..num_elems).into_iter().for_each(|i| print!("{:0>2}, ", (explicit::rotation_transform(i) + r + 1) % D));
@@ -776,7 +780,7 @@ mod tests {
         // Enumerate and map all possible axis flips
         let mut flip_ids = HashMap::<usize, usize>::default();
         let mut flip_axes = Vec::default();
-        for flip in (0..num_children).map(|i| explicit::axis_transform(i)) {
+        for flip in (0..num_children).map(|i| explicit::flip_transform(i)) {
             if !flip_ids.contains_key(&flip) {
                 flip_ids.insert(flip, flip_axes.len());
                 flip_axes.push(flip);
@@ -795,7 +799,7 @@ mod tests {
                 let morton = flip ^ explicit::shl_cyclic::<_, D>(explicit::gray(index), rotation);
 
                 // To find what the next transform would be, we flip and rotate again
-                let flip = flip ^ explicit::shl_cyclic::<_, D>(explicit::axis_transform(index), rotation);
+                let flip = flip ^ explicit::shl_cyclic::<_, D>(explicit::flip_transform(index), rotation);
                 let rotation = (explicit::rotation_transform(index) + rotation + 1) % D;
                 
                 // Next transform id is a magic combination of flip and rotation
@@ -886,25 +890,34 @@ mod tests {
         Ok(())
     }
 
-    test_curve!(hilbert_expand, true, u8, 2, 3, 4, 5, 6, 7, 8);
-    test_curve!(hilbert_expand, true, u16, 2, 3, 4, 5, 6, 7, 8);
-    test_curve!(hilbert_expand, true, u32, 2, 3, 4);
-    test_curve!(hilbert_expand, true, u64, 2);
+    macro_rules! hilbert_expand {
+        ($t:ty, $d:literal) => {
+            Hilbert::<Expand<$t, $d>, $d>
+        };
+    }
 
-    test_curve!(hilbert_fixed, true, u8, 2, 3, 4);
-    test_curve!(hilbert_fixed, true, u16, 2, 3, 4, 5, 6, 7, 8);
-    test_curve!(hilbert_fixed, true, u32, 2, 3, 4, 5, 6, 7, 8);
-    test_curve!(hilbert_fixed, true, u64, 2, 3, 4, 5, 6, 7, 8);
-    test_curve!(hilbert_fixed, true, u128, 2, 3, 4, 5, 6, 7, 8);
+    macro_rules! hilbert_fixed {
+        ($t:ty, $d:literal) => {
+            Hilbert::<Fixed<$t, $d>, $d>
+        };
+    }
 
-    //    test_curve_siblings!(hilbert_expand, true, u8, 2, 3, 4, 5, 6, 7, 8);
-    //    test_curve_siblings!(hilbert_expand, true, u16, 2, 3, 4, 5, 6, 7, 8);
-    //    test_curve_siblings!(hilbert_expand, true, u32, 2, 3, 4);
-    //    test_curve_siblings!(hilbert_expand, true, u64, 2);
-    //
-    //    test_curve_siblings!(hilbert_fixed, true, u8, 2, 3, 4);
-    //    test_curve_siblings!(hilbert_fixed, true, u16, 2, 3, 4, 5, 6, 7, 8);
-    //    test_curve_siblings!(hilbert_fixed, true, u32, 2, 3, 4, 5, 6, 7, 8);
-    //    test_curve_siblings!(hilbert_fixed, true, u64, 2, 3, 4, 5, 6, 7, 8);
-    //    test_curve_siblings!(hilbert_fixed, true, u128, 2, 3, 4, 5, 6, 7, 8);
+    macro_rules! hilbert_tests {
+        ($curve:path, $t:ty, $($d:literal),+) => {
+            test_curve!($curve, false, $t, $($d),+);
+//            test_curve_siblings!($curve, false, $t, $($d),+);
+//            test_curve_neighbours!($curve, false, $t, $($d),+);
+        };
+    }
+
+    hilbert_tests!(hilbert_expand, u8, 2, 3, 4, 5, 6, 7, 8);
+    hilbert_tests!(hilbert_expand, u16, 2, 3, 4, 5, 6, 7, 8);
+    hilbert_tests!(hilbert_expand, u32, 2, 3, 4);
+    hilbert_tests!(hilbert_expand, u64, 2);
+
+    hilbert_tests!(hilbert_fixed, u8, 2, 3, 4);
+    hilbert_tests!(hilbert_fixed, u16, 2, 3, 4, 5, 6, 7, 8);
+    hilbert_tests!(hilbert_fixed, u32, 2, 3, 4, 5, 6, 7, 8);
+    hilbert_tests!(hilbert_fixed, u64, 2, 3, 4, 5, 6, 7, 8);
+    hilbert_tests!(hilbert_fixed, u128, 2, 3, 4, 5, 6, 7, 8);
 }

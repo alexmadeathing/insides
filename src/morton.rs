@@ -42,16 +42,22 @@ use crate::internal::{array_from_fn, NumTraits};
 /// A Morton encoded space filling curve implementation
 ///
 /// Morton encoding, also known as a
-/// [Z-order curve](https://en.wikipedia.org/wiki/Z-order_curve), is a space
-/// filling algorithm which maps a multidimensional set of coordinates to one
-/// dimension, achieved by interleaving the bit sequence of each coordinate
-/// value.
+/// [Z-order curve](https://en.wikipedia.org/wiki/Z-order_curve), is a fractal
+/// space filling algorithm which maps a multidimensional set of coordinates to
+/// one dimension and vice versa, achieved by interleaving the bit sequence of
+/// each coordinate value.
 ///
 /// Whilst other encoding methods may exhibit better spatial locality (such as
 /// the Hilbert curve), the Morton curve offers excellent CPU performance,
-/// since most behaviours can be reduced to a simple set of bitwise operations,
-/// making it an ideal choice for applications such and quad trees and octrees.
+/// since the behaviour can be reduced to a simple set of bitwise operations,
+/// making it an ideal choice for CPU bound applications.
 ///
+/// # Self Similarity
+/// The Morton implementation featured in this crate is self-similar
+/// in that lower magnitude indices will always reference the same
+/// coordinates regardless how deep the curve is iterated. There is no
+/// "depth" or "level" parameter.
+/// 
 /// # Examples
 /// ```rust
 /// use insides::*;

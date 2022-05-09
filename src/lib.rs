@@ -38,32 +38,48 @@
 #![warn(rustdoc::missing_doc_code_examples)]
 #![deny(rustdoc::invalid_rust_codeblocks)]
 
-//! A compact, high performance space filling curve library for Rust.
+//! A high performance, multi-dimensional, space filling curve crate for Rust.
 //!
-//! This library provides an abstract interface to generalise interactions with
-//! space filling curves as well as a morton curve implementation and
-//! supporting manipulation methods.
+//! This crate provides a set of multi-dimensional space filling curve
+//! implementations and an abstract interface to generalise interactions with
+//! curve indices.
 //!
-//! We currently only support Morton Encoding, but the interface will support
-//! a Hilbert implementation - and we have plans to include it soon.
-//!
-//! # Morton Encoding
-//! Morton encoding, also known as a
-//! [Z-order curve](https://en.wikipedia.org/wiki/Z-order_curve), is a space
-//! filling algorithm which maps a multidimensional set of coordinates to one
-//! dimension, achieved by interleaving the bit sequence of each coordinate
-//! value.
-//!
-//! Whilst other encoding methods may exhibit better spatial locality (such as
-//! the Hilbert curve), the Morton curve offers excellent CPU performance,
-//! since most behaviours can be reduced to a simple set of bitwise operations -
-//! making it an ideal choice for applications such and quad trees and octrees.
-//!
+//! # Supported Curves
+//! * [Morton]
+//!   * A Morton, or Z-Order, curve implementation
+//!   * Extremely low CPU cost (currently the fastest morton implementation)
+//! * [Hilbert]
+//!   * A Hilbert curve implementation
+//!   * Low CPU cost (on a par with the current fastest crate, [Fast Hilbert](https://crates.io/crates/fast_hilbert))
+//!   * Maintains excellent spatial locality
+//! 
+//! # Supported Dimensions and Types
+//! insides supports multiple dimensions and data types. Supporting many types
+//! and dimensions can get complex, so insides leans on the
+//! [dilate](https://github.com/alexmadeathing/dilate) crate to manage the
+//! conversion between indices and coordinates.
+//! 
+//! The most important thing to note is the use of
+//! [Expand](https://docs.rs/dilate/latest/dilate/expand/trait.DilateExpand.html)
+//! vs.
+//! [Fixed](https://docs.rs/dilate/latest/dilate/fixed/trait.DilateFixed.html).
+//! 
+//! Expand takes a source integer type and expands it to a larger integer type
+//! to accommodate the multi-dimensional coordinates.
+//! 
+//! Fixed tries to accommodate the multi-dimensional coordinates within the
+//! source integer type (I.e. it uses exactly the integer type you specify).
+//! 
+//! For more information on the supported dimensions and types, please see
+//! [Supported Dilations via Expand](https://docs.rs/dilate/latest/dilate/expand/trait.DilateExpand.html#supported-expand-dilations)
+//! and
+//! [Supported Dilations via Fixed](https://docs.rs/dilate/latest/dilate/fixed/trait.DilateFixed.html#supported-fixed-dilations).
+//! 
 //! # Examples
 //! ```rust
 //! use insides::*;
 //!
-//! // Create a 3D morton location using u16 coordinate indices
+//! // Create a 3D morton location using u16 coordinate indices expanded into a u64 index
 //! // At the moment, we have to specify the number of dimensions twice, sorry!
 //! // (this will change with improvements to Rust const generics)
 //! let location = Morton::<Expand<u16, 3>, 3>::from_coords([1, 2, 3]);
@@ -78,10 +94,14 @@ use core::{fmt::Debug, hash::Hash};
 pub use dilate::*;
 
 /// Morton curve implementation
+///
+/// [Morton](crate::morton::Morton) struct for implementation details
 pub mod morton;
 pub use crate::morton::Morton;
 
 /// Hilbert curve implementation
+/// 
+/// See [Hilbert](crate::hilbert::Hilbert) struct for implementation details
 pub mod hilbert;
 pub use crate::hilbert::Hilbert;
 
@@ -119,7 +139,7 @@ pub enum QueryDirection {
 }
 
 impl QueryDirection {
-    #[inline]
+    #[inline(always)]
     fn mix<I>(self, index: I, axis: usize) -> I
     where
         I: NumTraits,
@@ -161,7 +181,7 @@ pub trait SpaceFillingCurve<const D: usize>: Sized + Ord + Copy + Default + Debu
     ///
     /// This function is provided for situations where an existing
     /// encoded index is available and you wish to use the various
-    /// manipulation methods provided by this library.
+    /// manipulation methods provided by this crate.
     ///
     /// # Panics
     /// Panics if parameter 'index' is greater than Self::INDEX_MAX
