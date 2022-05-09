@@ -9,17 +9,20 @@ This library is in an alpha stage of development. Its interface may be subject t
 For migration notes, please see: https://github.com/alexmadeathing/insides/releases
 
 # insides
-A compact, high performance space filling curve library for Rust.
+A high performance, multi-dimensional, type safe, space filling curve library for Rust.
 
-This library provides an abstract interface to generalise interactions with
-space filling curves as well as a morton curve implementation and
-supporting manipulation methods.
+This library provides a set of multi-dimensional space filling curve
+implementations and an abstract interface to generalise interactions and
+promote flexibility in your applications.
 
 # Supported Curves
-* Morton - A morton, or Z-order, curve implementation
-
-We currently only support Morton Encoding, but the interface will support
-other curve implementations, such as Hilbert - and we have a branch nearly ready for integration!
+* [Morton](https://docs.rs/insides/latest/insides/morton/struct.Morton.html)
+  * A Morton, or Z-Order, curve implementation
+  * Extremely low CPU cost (currently the fastest morton implementation)
+* [Hilbert](https://docs.rs/insides/latest/insides/hilbert/struct.Hilbert.html)
+  * A Hilbert curve implementation
+  * Very low CPU cost (on a par with the current fastest library, [Fast Hilbert](https://crates.io/crates/fast_hilbert))
+  * Maintains excellent spatial locality
 
 # Features
 * High performance - Ready to use in performance sensitive contexts
@@ -28,6 +31,13 @@ other curve implementations, such as Hilbert - and we have a branch nearly ready
 * `no_std` - Suitable for embedded devices (additional standard library features can be enabled via the `std` feature)
 * Extensible - Flexible trait based implementation
 * Minimal dependencies - Release build depends only on [dilate](https://github.com/alexmadeathing/dilate) for integer dilation
+
+# Hilbert Performance
+The Hilbert implementation in insides is on a par with the current fastest library, [Fast Hilbert](https://crates.io/crates/fast_hilbert). More specifically, using the `lut_large_d2` feature, it out performs Fast Hilbert when converting a hilbert index to coordinates and matches performance with Fast Hilbert when converting coordinates to a hilbert index.
+
+A full breakdown of performance for each feature and similar libraries is shown below. This benchmark was performed on a 2D grid of 256x256 coordinates, though it should be noted that insides also works for any set of dimensions supported by [dilate](https://github.com/alexmadeathing/dilate).
+
+
 
 # Getting Started
 First, link insides into your project's cargo.toml.

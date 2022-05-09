@@ -191,7 +191,7 @@ mod lut_small {
     #[inline(always)]
     fn walk_transforms<T: NumTraits, F, const D: usize>(
         index: T,
-        min_order: usize,
+        order: usize,
         mut f: F,
     ) -> (usize, T)
     where
@@ -199,16 +199,10 @@ mod lut_small {
     {
         let lower_mask = T::one().shl(D).sub(T::one());
 
-        // A subset of highest bits of index will be 0, therefore, we can skip a certain
-        // number of iterations in the following loop. Note that skipping iterations
-        // still requires us to rotate the pattern as if we had iterated all orders, see
-        // rotate_amount below.
-        let order = (T::bits() - index.lz() + D - 1) / D;
-
         // We iterate in reverse because higher orders affect the rotation of lower orders
         let mut flip_axes = T::zero();
         let mut rotate_amount = (D - 1) - (order % D);
-        for shift in (min_order..order).rev().map(|i| i * D) {
+        for shift in (0..order).rev().map(|i| i * D) {
             // Extract a portion of the index
             let index_partial = index.shr(shift).bit_and(lower_mask);
 
@@ -225,10 +219,13 @@ mod lut_small {
     #[inline(always)]
     pub fn morton_to_hilbert<T: NumTraits, const D: usize>(morton_index: T) -> T {
         debug_assert!(has_lut::<D>());
+
+        let order = (T::bits() - morton_index.lz() + D - 1) / D;
+
         let mut hilbert_index = T::zero();
-        walk_transforms::<_, _, D>(
+        walk_transforms::<T, _, D>(
             morton_index,
-            0,
+            order,
             |morton_partial, shift, rotate_amount, flip_axes| {
                 let hilbert_partial = shr_into_gray_inv_lut::<_, D>(flip_axes.bit_xor(morton_partial), rotate_amount);
                 hilbert_index = hilbert_index.bit_or(hilbert_partial.shl(shift));
@@ -241,10 +238,13 @@ mod lut_small {
     #[inline(always)]
     pub fn hilbert_to_morton<T: NumTraits, const D: usize>(hilbert_index: T) -> T {
         debug_assert!(has_lut::<D>());
+
+        let order = (T::bits() - hilbert_index.lz() + D - 1) / D;
+
         let mut morton_index = T::zero();
-        walk_transforms::<_, _, D>(
+        walk_transforms::<T, _, D>(
             hilbert_index,
-            0,
+            order,
             |hilbert_partial, shift, rotate_amount, flip_axes| {
                 let morton_partial = flip_axes.bit_xor(gray_into_shl_lut::<_, D>(hilbert_partial, rotate_amount));
                 morton_index = morton_index.bit_or(morton_partial.shl(shift));
@@ -389,14 +389,14 @@ mod lut_large {
         let stride_bits = stride::<D>() * D;
         let order = ((T::bits() + stride_bits - 1) - morton_index.lz()) / stride_bits;
 
-        T::from_inner(walk_combined_transforms::<T::Inner, _, D>(
-            morton_index.to_inner(),
+        walk_combined_transforms::<T, _, D>(
+            morton_index,
             order,
             |transform, morton_partial| {
-                let hilbert_partial = combined_hilbert_lut::<T::Inner, D>(transform, morton_partial);
+                let hilbert_partial = combined_hilbert_lut::<T, D>(transform, morton_partial);
                 (hilbert_partial, hilbert_partial)
             },
-        ))
+        )
     }
 
     #[inline(always)]
@@ -406,14 +406,14 @@ mod lut_large {
         let stride_bits = stride::<D>() * D;
         let order = ((T::bits() + stride_bits - 1) - hilbert_index.lz()) / stride_bits;
 
-        T::from_inner(walk_combined_transforms::<T::Inner, _, D>(
-            hilbert_index.to_inner(),
+        walk_combined_transforms::<T, _, D>(
+            hilbert_index,
             order,
             |transform, hilbert_partial| {
-                let morton_partial = combined_morton_lut::<T::Inner, D>(transform, hilbert_partial);
+                let morton_partial = combined_morton_lut::<T, D>(transform, hilbert_partial);
                 (hilbert_partial, morton_partial)
             },
-        ))
+        )
     }
 }
 
@@ -536,6 +536,31 @@ mod explicit {
     }
 }
 
+#[inline(always)]
+fn morton_to_hilbert<T: NumTraits, const D: usize>(morton_index: T) -> T {
+    if lut_large::has_lut::<D>() {
+        return lut_large::morton_to_hilbert::<_, D>(morton_index);
+    }
+
+    if lut_small::has_lut::<D>() {
+        return lut_small::morton_to_hilbert::<_, D>(morton_index);
+    }
+
+    explicit::morton_to_hilbert::<_, D>(morton_index)
+}
+
+#[inline(always)]
+fn hilbert_to_morton<T: NumTraits, const D: usize>(hilbert_index: T) -> T {
+    if lut_large::has_lut::<D>() {
+        return lut_large::hilbert_to_morton::<_, D>(hilbert_index);
+    }
+
+    if lut_small::has_lut::<D>() {
+        return lut_small::hilbert_to_morton::<_, D>(hilbert_index);
+    }
+
+    explicit::hilbert_to_morton::<_, D>(hilbert_index)
+}
 
 /// A Hilbert encoded space filling curve implementation
 ///
@@ -555,34 +580,55 @@ mod explicit {
 /// ```
 /// 
 /// # Performance
-/// The Hilbert implementation in insides is on a par with the current fastest
-/// library, [Fast Hilbert](https://crates.io/crates/fast_hilbert). More
-/// specifically, using the `lut_large_d2` feature, it out performs Fast
-/// Hilbert when converting a hilbert index to coordinates and Fast Hilbert
-/// slightly out performs insides when converting coordinates to a hilbert
-/// index.
+/// When using the `lut_large_d2` feature, the Hilbert implementation in
+/// insides is on a par with the current fastest library,
+/// [Fast Hilbert](https://crates.io/crates/fast_hilbert).
 /// 
-/// A full breakdown of performance for each feature and similar libraries is shown below.
+/// A full breakdown of performance for each feature and similar libraries is
+/// shown below. Tests were performed using all types supported by each library
+/// and times averaged. Times are specific to the machine running the benchmarks;
+/// your results may vary.
+/// 
+/// Please also note that at these extremely small timeframes, subtle differences
+/// in the way the compiler optimises the code can lead to relatively large
+/// fuctuations in the results (this is why we say that insides is "on a par" with
+/// Fast Hilbert, and not categorically faster or slower).
 /// 
 /// ### 2D Benchmark
-/// Benchmark performed on a 256x256 grid of 2D coordinates. Times are specific to my machine, your results may vary.
+/// Benchmark performed on a 256x256 grid of 2D coordinates.
 /// 
-/// | Library                               | Index to Coords Time | Coords to Index Time | Notes        |
-/// | ------------------------------------- | -------------------- | -------------------- | ------------ |
-/// | insides (with feature `lut_large_d2`) | **337μs**            | 390μs                |              |
-/// | fast_hilbert                          | 510μs                | **348μs**            | 2D only      |
-/// | hilbert_2d                            | 533μs                | 697μs                | 2D only      |
-/// | hilbert_curve                         | 616μs                | 643μs                | 2D only      |
-/// | insides (with feature `lut_small_d2`) | 822μs                | 1.12ms               |              |
-/// | insides                               | 1.55ms               | 2.21ms               |              |
-/// | hilbert_index                         | 1.83ms               | 2.64ms               |              |
-/// | hilbert                               | 18.11ms              | 14.30ms              |              |
+/// | Library                               | Index to Coords Time | Coords to Index Time |
+/// | ------------------------------------- | -------------------- | -------------------- |
+/// | insides (with feature `lut_large_d2`) | **373μs**            | 416μs                |
+/// | fast_hilbert                          | 462μs                | **405μs**            |
+/// | hilbert_2d                            | 533μs                | 697μs                |
+/// | hilbert_curve                         | 616μs                | 643μs                |
+/// | insides (with feature `lut_small_d2`) | 822μs                | 1.1ms                |
+/// | insides                               | 1.5ms                | 2.2ms                |
+/// | hilbert_index                         | 1.8ms                | 2.6ms                |
+/// | hilbert                               | 18.1ms               | 14.3ms               |
 ///
 /// ### 3D Benchmark
-/// Benchmark performed on a 64x64x64 grid of 2D coordinates. Times are specific to my machine, your results may vary.
+/// Benchmark performed on a 32x32x32 grid of 3D coordinates (performed twice to balance with other tables).
+/// 
+/// | Library                               | Index to Coords Time | Coords to Index Time |
+/// | ------------------------------------- | -------------------- | -------------------- |
+/// | insides (with feature `lut_large_d2`) | **600μs**            | **705μs**            |
+/// | insides (with feature `lut_small_d2`) | 844μs                | 1.1ms                |
+/// | insides                               | 1.2ms                | 2.0ms                |
+/// | hilbert_index                         | 1.4ms                | 1.9ms                |
+/// | hilbert                               | 17.1ms               | 14.3ms               |
 ///
 /// ### 4D Benchmark
-/// Benchmark performed on a 16x16x16x16 grid of 2D coordinates. Times are specific to my machine, your results may vary.
+/// Benchmark performed on a 16x16x16x16 grid of 4D coordinates.
+/// 
+/// | Library                               | Index to Coords Time | Coords to Index Time |
+/// | ------------------------------------- | -------------------- | -------------------- |
+/// | insides (with feature `lut_large_d2`) | **394μs**            | **470μs**            |
+/// | insides (with feature `lut_small_d2`) | 656μs                | 798μs                |
+/// | hilbert_index                         | 1.1ms                | 1.1ms                |
+/// | insides                               | 955μs                | 1.5ms                |
+/// | hilbert                               | 17.4ms               | 14.5ms               |
 /// 
 // Until we have complex generic constants, we have to pass D in here (needed by coords)
 // Waiting on: https://github.com/rust-lang/rust/issues/76560
@@ -593,7 +639,7 @@ where
     DM: DilationMethod,
     DM::Undilated: CurveCoord,
     DM::Dilated: CurveIndex;
-
+    
 impl<DM, const D: usize> SpaceFillingCurve<D> for Hilbert<DM, D>
 where
     // When https://github.com/rust-lang/rust/issues/52662 is available, we can clean this up
@@ -621,29 +667,20 @@ where
     #[inline(never)] // Temporary
     fn from_coords(coords: [Self::Coord; D]) -> Self {
         let morton_index = Morton::<DM, D>::from_coords(coords).index();
-
-        if lut_large::has_lut::<D>() {
-            return Self(lut_large::morton_to_hilbert::<_, D>(morton_index));
+        if morton_index.fits_in_usize() {
+            Self(Self::Index::from_usize(morton_to_hilbert::<usize, D>(morton_index.to_usize())))
+        } else {
+            Self(morton_to_hilbert::<Self::Index, D>(morton_index))
         }
-
-        if lut_small::has_lut::<D>() {
-            return Self(lut_small::morton_to_hilbert::<_, D>(morton_index));
-        }
-
-        Self(explicit::morton_to_hilbert::<_, D>(morton_index))
     }
 
     #[inline(never)] // Temporary
     fn coords(&self) -> [Self::Coord; D] {
-        if lut_large::has_lut::<D>() {
-            return Morton::<DM, D>::from_index(lut_large::hilbert_to_morton::<_, D>(self.0)).coords();
+        if self.0.fits_in_usize() {
+            Morton::<DM, D>::from_index(Self::Index::from_usize(hilbert_to_morton::<usize, D>(self.0.to_usize()))).coords()
+        } else {
+            Morton::<DM, D>::from_index(morton_to_hilbert::<Self::Index, D>(self.0)).coords()
         }
-
-        if lut_small::has_lut::<D>() {
-            return  Morton::<DM, D>::from_index(lut_small::hilbert_to_morton::<_, D>(self.0)).coords();
-        }
-
-        Morton::<DM, D>::from_index(explicit::hilbert_to_morton::<_, D>(self.0)).coords()
     }
 
     #[inline(always)]
@@ -691,14 +728,6 @@ mod tests {
         println!("#[cfg(feature = \"lut_small_d{D}\")]");
         println!("mod d{D} {{");
 
-        println!("    pub const AXIS_TX_INTO_SHL_LUT: [[u8; {num_elems}]; {D}] = [");
-        for r in 0..D {
-            print!("        [");
-            (0..num_elems).into_iter().for_each(|i| print!("{:0>2}, ", explicit::shl_cyclic::<_, D>(explicit::axis_transform(i), r)));
-            println!("],");
-        }
-        println!("    ];\n");
-
         println!("    pub const SHR_INTO_GRAY_INV_LUT: [[u8; {num_elems}]; {D}] = [");
         for r in 0..D {
             print!("        [");
@@ -711,6 +740,14 @@ mod tests {
         for r in 0..D {
             print!("        [");
             (0..num_elems).into_iter().for_each(|i| print!("{:0>2}, ", explicit::shl_cyclic::<_, D>(explicit::gray(i), r)));
+            println!("],");
+        }
+        println!("    ];\n");
+
+        println!("    pub const AXIS_TX_INTO_SHL_LUT: [[u8; {num_elems}]; {D}] = [");
+        for r in 0..D {
+            print!("        [");
+            (0..num_elems).into_iter().for_each(|i| print!("{:0>2}, ", explicit::shl_cyclic::<_, D>(explicit::axis_transform(i), r)));
             println!("],");
         }
         println!("    ];\n");
