@@ -1,3 +1,5 @@
+use dilate::{DilateFixed, Fixed, DilationMethod};
+
 // Can be replaced with core::array::from_fn when stabilised
 // https://github.com/rust-lang/rust/pull/94119
 #[inline]
@@ -11,6 +13,161 @@ where
         idx += 1;
         res
     })
+}
+
+pub trait MortonEncode: Sized {
+    fn morton_encode_d2(coords: [Self; 2]) -> Self;
+    fn morton_encode_d3(coords: [Self; 3]) -> Self;
+    fn morton_encode_d4(coords: [Self; 4]) -> Self;
+}
+
+impl MortonEncode for u8 {
+    fn morton_encode_d2(coords: [Self; 2]) -> Self {
+        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 2>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
+        let mut page = ((coords[1] as u16) << 4) | (coords[0] as u16);
+        page = page.dilate_fixed::<2>().value();
+        ((page >> 7) | page) as Self
+    }
+
+    fn morton_encode_d3(coords: [Self; 3]) -> Self {
+        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 3>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
+        let mut page = ((coords[2] as u32) << 4) | ((coords[1] as u32) << 2) | (coords[0] as u32);
+        page = page.dilate_fixed::<3>().value();
+        (((page >> 10) | (page >> 5) | page) as Self) & 0x3F
+    }
+
+    fn morton_encode_d4(coords: [Self; 4]) -> Self {
+        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 4>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
+        let mut page = ((coords[3] as u32) << 6) | ((coords[2] as u32) << 4) | ((coords[1] as u32) << 2) | (coords[0] as u32);
+        page = page.dilate_fixed::<4>().value();
+        ((page >> 21) | (page >> 14) | (page >> 7) | page) as Self
+    }
+}
+
+impl MortonEncode for u16 {
+    fn morton_encode_d2(coords: [Self; 2]) -> Self {
+        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 2>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
+        let mut page = ((coords[1] as u32) << 8) | (coords[0] as u32);
+        page = page.dilate_fixed::<2>().value();
+        ((page >> 15) | page) as Self
+    }
+
+    fn morton_encode_d3(coords: [Self; 3]) -> Self {
+        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 3>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
+        let mut page = ((coords[2] as u64) << 10) | ((coords[1] as u64) << 5) | (coords[0] as u64);
+        page = page.dilate_fixed::<3>().value();
+        (((page >> 28) | (page >> 14) | page) as Self) & 0x7FFF
+    }
+
+    fn morton_encode_d4(coords: [Self; 4]) -> Self {
+        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 4>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
+        let mut page = ((coords[3] as u64) << 12) | ((coords[2] as u64) << 8) | ((coords[1] as u64) << 4) | (coords[0] as u64);
+        page = page.dilate_fixed::<4>().value();
+        ((page >> 45) | (page >> 30) | (page >> 15) | page) as Self
+    }
+}
+
+impl MortonEncode for u32 {
+    fn morton_encode_d2(coords: [Self; 2]) -> Self {
+        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 2>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
+        let mut page = ((coords[1] as u64) << 16) | (coords[0] as u64);
+        page = page.dilate_fixed::<2>().value();
+        ((page >> 31) | page) as Self
+    }
+
+    fn morton_encode_d3(coords: [Self; 3]) -> Self {
+        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 3>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
+
+        let mut page_xy = ((coords[1] as u64) << 10) | (coords[0] as u64);
+        page_xy = page_xy.dilate_fixed::<3>().value();
+        let result_xy = (((page_xy >> 29) | page_xy) as Self) & 0x7FFF;
+
+        let mut page_z = coords[2];
+        page_z = page_z.dilate_fixed::<3>().value();
+        let result_z = page_z << 2;
+
+        result_xy | result_z
+    }
+
+    fn morton_encode_d4(coords: [Self; 4]) -> Self {
+        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 4>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
+
+        let mut page_xy = ((coords[1] as u64) << 8) | (coords[0] as u64);
+        page_xy = page_xy.dilate_fixed::<4>().value();
+        let result_xy = ((page_xy >> 31) | page_xy) as Self;
+
+        let mut page_zw = ((coords[3] as u64) << 8) | (coords[2] as u64);
+        page_zw = page_zw.dilate_fixed::<4>().value();
+        let result_zw = ((page_zw >> 29) | (page_zw << 2)) as Self;
+
+        result_xy | result_zw
+    }
+}
+
+impl MortonEncode for u64 {
+    fn morton_encode_d2(coords: [Self; 2]) -> Self {
+        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 2>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
+        unimplemented!();
+    }
+
+    fn morton_encode_d3(coords: [Self; 3]) -> Self {
+        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 3>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
+        unimplemented!();
+    }
+
+    fn morton_encode_d4(coords: [Self; 4]) -> Self {
+        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 4>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
+        unimplemented!();
+    }
+}
+
+impl MortonEncode for u128 {
+    fn morton_encode_d2(coords: [Self; 2]) -> Self {
+        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 2>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
+        unimplemented!();
+    }
+
+    fn morton_encode_d3(coords: [Self; 3]) -> Self {
+        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 3>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
+        unimplemented!();
+    }
+
+    fn morton_encode_d4(coords: [Self; 4]) -> Self {
+        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 4>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
+        unimplemented!();
+    }
+}
+
+impl MortonEncode for usize {
+    fn morton_encode_d2(coords: [Self; 2]) -> Self {
+        #[cfg(target_pointer_width = "16")]
+        let r = u16::morton_encode_d2(coords.map(|c| c as u16));
+        #[cfg(target_pointer_width = "32")]
+        let r = u32::morton_encode_d2(coords.map(|c| c as u32));
+        #[cfg(target_pointer_width = "64")]
+        let r = u64::morton_encode_d2(coords.map(|c| c as u64));
+        r as usize
+    }
+
+    fn morton_encode_d3(coords: [Self; 3]) -> Self {
+        #[cfg(target_pointer_width = "16")]
+        let r = u16::morton_encode_d3(coords.map(|c| c as u16));
+        #[cfg(target_pointer_width = "32")]
+        let r = u32::morton_encode_d3(coords.map(|c| c as u32));
+        #[cfg(target_pointer_width = "64")]
+        let r = u64::morton_encode_d3(coords.map(|c| c as u64));
+        r as usize
+    }
+
+    fn morton_encode_d4(coords: [Self; 4]) -> Self {
+        #[cfg(target_pointer_width = "16")]
+        let r = u16::morton_encode_d4(coords.map(|c| c as u16));
+        #[cfg(target_pointer_width = "32")]
+        let r = u32::morton_encode_d4(coords.map(|c| c as u32));
+        #[cfg(target_pointer_width = "64")]
+        let r = u64::morton_encode_d4(coords.map(|c| c as u64));
+        r as usize
+    }
 }
 
 pub trait NumTraits: Copy + Ord {

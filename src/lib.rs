@@ -106,7 +106,7 @@ pub mod hilbert;
 pub use crate::hilbert::Hilbert;
 
 pub(crate) mod internal;
-use internal::NumTraits;
+use internal::{NumTraits, MortonEncode};
 
 /// Trait wrapper for coordinates
 pub trait CurveCoord: dilate::DilatableType + NumTraits {}
@@ -119,7 +119,7 @@ impl CurveCoord for u128 {}
 impl CurveCoord for usize {}
 
 /// Trait wrapper for indices
-pub trait CurveIndex: dilate::DilatableType + NumTraits {}
+pub trait CurveIndex: dilate::DilatableType + NumTraits + MortonEncode {}
 
 impl CurveIndex for u8 {}
 impl CurveIndex for u16 {}
