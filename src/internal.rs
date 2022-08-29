@@ -15,161 +15,6 @@ where
     })
 }
 
-pub trait MortonEncode: Sized {
-    fn morton_encode_d2(coords: [Self; 2]) -> Self;
-    fn morton_encode_d3(coords: [Self; 3]) -> Self;
-    fn morton_encode_d4(coords: [Self; 4]) -> Self;
-}
-
-impl MortonEncode for u8 {
-    fn morton_encode_d2(coords: [Self; 2]) -> Self {
-        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 2>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
-        let mut page = ((coords[1] as u16) << 4) | (coords[0] as u16);
-        page = page.dilate_fixed::<2>().value();
-        ((page >> 7) | page) as Self
-    }
-
-    fn morton_encode_d3(coords: [Self; 3]) -> Self {
-        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 3>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
-        let mut page = ((coords[2] as u32) << 4) | ((coords[1] as u32) << 2) | (coords[0] as u32);
-        page = page.dilate_fixed::<3>().value();
-        (((page >> 10) | (page >> 5) | page) as Self) & 0x3F
-    }
-
-    fn morton_encode_d4(coords: [Self; 4]) -> Self {
-        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 4>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
-        let mut page = ((coords[3] as u32) << 6) | ((coords[2] as u32) << 4) | ((coords[1] as u32) << 2) | (coords[0] as u32);
-        page = page.dilate_fixed::<4>().value();
-        ((page >> 21) | (page >> 14) | (page >> 7) | page) as Self
-    }
-}
-
-impl MortonEncode for u16 {
-    fn morton_encode_d2(coords: [Self; 2]) -> Self {
-        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 2>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
-        let mut page = ((coords[1] as u32) << 8) | (coords[0] as u32);
-        page = page.dilate_fixed::<2>().value();
-        ((page >> 15) | page) as Self
-    }
-
-    fn morton_encode_d3(coords: [Self; 3]) -> Self {
-        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 3>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
-        let mut page = ((coords[2] as u64) << 10) | ((coords[1] as u64) << 5) | (coords[0] as u64);
-        page = page.dilate_fixed::<3>().value();
-        (((page >> 28) | (page >> 14) | page) as Self) & 0x7FFF
-    }
-
-    fn morton_encode_d4(coords: [Self; 4]) -> Self {
-        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 4>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
-        let mut page = ((coords[3] as u64) << 12) | ((coords[2] as u64) << 8) | ((coords[1] as u64) << 4) | (coords[0] as u64);
-        page = page.dilate_fixed::<4>().value();
-        ((page >> 45) | (page >> 30) | (page >> 15) | page) as Self
-    }
-}
-
-impl MortonEncode for u32 {
-    fn morton_encode_d2(coords: [Self; 2]) -> Self {
-        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 2>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
-        let mut page = ((coords[1] as u64) << 16) | (coords[0] as u64);
-        page = page.dilate_fixed::<2>().value();
-        ((page >> 31) | page) as Self
-    }
-
-    fn morton_encode_d3(coords: [Self; 3]) -> Self {
-        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 3>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
-
-        let mut page_xy = ((coords[1] as u64) << 10) | (coords[0] as u64);
-        page_xy = page_xy.dilate_fixed::<3>().value();
-        let result_xy = (((page_xy >> 29) | page_xy) as Self) & 0x7FFF;
-
-        let mut page_z = coords[2];
-        page_z = page_z.dilate_fixed::<3>().value();
-        let result_z = page_z << 2;
-
-        result_xy | result_z
-    }
-
-    fn morton_encode_d4(coords: [Self; 4]) -> Self {
-        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 4>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
-
-        let mut page_xy = ((coords[1] as u64) << 8) | (coords[0] as u64);
-        page_xy = page_xy.dilate_fixed::<4>().value();
-        let result_xy = ((page_xy >> 31) | page_xy) as Self;
-
-        let mut page_zw = ((coords[3] as u64) << 8) | (coords[2] as u64);
-        page_zw = page_zw.dilate_fixed::<4>().value();
-        let result_zw = ((page_zw >> 29) | (page_zw << 2)) as Self;
-
-        result_xy | result_zw
-    }
-}
-
-impl MortonEncode for u64 {
-    fn morton_encode_d2(coords: [Self; 2]) -> Self {
-        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 2>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
-        unimplemented!();
-    }
-
-    fn morton_encode_d3(coords: [Self; 3]) -> Self {
-        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 3>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
-        unimplemented!();
-    }
-
-    fn morton_encode_d4(coords: [Self; 4]) -> Self {
-        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 4>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
-        unimplemented!();
-    }
-}
-
-impl MortonEncode for u128 {
-    fn morton_encode_d2(coords: [Self; 2]) -> Self {
-        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 2>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
-        unimplemented!();
-    }
-
-    fn morton_encode_d3(coords: [Self; 3]) -> Self {
-        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 3>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
-        unimplemented!();
-    }
-
-    fn morton_encode_d4(coords: [Self; 4]) -> Self {
-        debug_assert!(coords.iter().fold(0, |m, c| m | *c) <= Fixed::<Self, 4>::UNDILATED_MAX, "Attempting to dilate a value which exceeds maximum (See DilationMethod::UNDILATED_MAX)");
-        unimplemented!();
-    }
-}
-
-impl MortonEncode for usize {
-    fn morton_encode_d2(coords: [Self; 2]) -> Self {
-        #[cfg(target_pointer_width = "16")]
-        let r = u16::morton_encode_d2(coords.map(|c| c as u16));
-        #[cfg(target_pointer_width = "32")]
-        let r = u32::morton_encode_d2(coords.map(|c| c as u32));
-        #[cfg(target_pointer_width = "64")]
-        let r = u64::morton_encode_d2(coords.map(|c| c as u64));
-        r as usize
-    }
-
-    fn morton_encode_d3(coords: [Self; 3]) -> Self {
-        #[cfg(target_pointer_width = "16")]
-        let r = u16::morton_encode_d3(coords.map(|c| c as u16));
-        #[cfg(target_pointer_width = "32")]
-        let r = u32::morton_encode_d3(coords.map(|c| c as u32));
-        #[cfg(target_pointer_width = "64")]
-        let r = u64::morton_encode_d3(coords.map(|c| c as u64));
-        r as usize
-    }
-
-    fn morton_encode_d4(coords: [Self; 4]) -> Self {
-        #[cfg(target_pointer_width = "16")]
-        let r = u16::morton_encode_d4(coords.map(|c| c as u16));
-        #[cfg(target_pointer_width = "32")]
-        let r = u32::morton_encode_d4(coords.map(|c| c as u32));
-        #[cfg(target_pointer_width = "64")]
-        let r = u64::morton_encode_d4(coords.map(|c| c as u64));
-        r as usize
-    }
-}
-
 pub trait NumTraits: Copy + Ord {
     // Add methods as needed
     fn zero() -> Self;
@@ -299,6 +144,154 @@ macro_rules! impl_num_traits {
 
 impl_num_traits!(u8, u16, u32, u64, u128, usize);
 
+pub trait MortonEncode<const D: usize>: Copy {
+    fn morton_encode(coords: [Self; D]) -> Self;
+}
+
+impl MortonEncode<2> for u8 {
+    fn morton_encode(coords: [Self; 2]) -> Self {
+        let dilated = ((coords[1] as u16) << 4 | coords[0] as u16).dilate_fixed::<2>().value();
+        (dilated >> 7 | dilated) as u8
+    }
+}
+
+impl MortonEncode<3> for u8 {
+    fn morton_encode(coords: [Self; 3]) -> Self {
+        let dilated = ((coords[2] as u32) << 4 | (coords[1] as u32) << 2 | coords[0] as u32).dilate_fixed::<3>().value();
+        (dilated >> 10 | dilated >> 5 | dilated) as u8 & 0x3F
+    }
+}
+
+impl MortonEncode<4> for u8 {
+    fn morton_encode(coords: [Self; 4]) -> Self {
+        let dilated = ((coords[3] as u32) << 6 | (coords[2] as u32) << 4 | (coords[1] as u32) << 2 | coords[0] as u32).dilate_fixed::<4>().value();
+        (dilated >> 21 | dilated >> 14 | dilated >> 7 | dilated) as u8
+    }
+}
+
+impl MortonEncode<2> for u16 {
+    fn morton_encode(coords: [Self; 2]) -> Self {
+        let dilated = ((coords[1] as u32) << 8 | coords[0] as u32).dilate_fixed::<2>().value();
+        (dilated >> 15 | dilated) as u16
+    }
+}
+
+impl MortonEncode<3> for u16 {
+    fn morton_encode(coords: [Self; 3]) -> Self {
+        // These coords are intentionally not packed contiguously so that we can avoid a bitmask when recombining
+        let dilated = ((coords[2] as u64) << 12 | (coords[1] as u64) << 6 | coords[0] as u64).dilate_fixed::<3>().value();
+        (dilated >> 34 | dilated >> 17 | dilated) as u16
+    }
+}
+
+impl MortonEncode<4> for u16 {
+    fn morton_encode(coords: [Self; 4]) -> Self {
+        let dilated = ((coords[3] as u64) << 12 | (coords[2] as u64) << 8 | (coords[1] as u64) << 4 | coords[0] as u64).dilate_fixed::<4>().value();
+        (dilated >> 45 | dilated >> 30 | dilated >> 15 | dilated) as u16
+    }
+}
+
+impl MortonEncode<2> for u32 {
+    fn morton_encode(coords: [Self; 2]) -> Self {
+        let dilated = ((coords[1] as u64) << 16 | coords[0] as u64).dilate_fixed::<2>().value();
+        (dilated >> 32 << 1 | dilated) as u32
+    }
+}
+
+impl MortonEncode<3> for u32 {
+    fn morton_encode(coords: [Self; 3]) -> Self {
+        // These coords are intentionally not packed contiguously so that we can avoid a bitmask when recombining
+        let dilated_xy = ((coords[1] as u64) << 11 | coords[0] as u64).dilate_fixed::<3>().value();
+        let result_xy = (dilated_xy >> 32 | dilated_xy) as u32;
+    
+        let dilated_z = coords[2].dilate_fixed::<3>().value();
+        let result_z = dilated_z << 2;
+    
+        result_xy | result_z
+    }
+}
+
+impl MortonEncode<4> for u32 {
+    fn morton_encode(coords: [Self; 4]) -> Self {
+        let dilated_xy = ((coords[1] as u64) << 8 | coords[0] as u64).dilate_fixed::<4>().value();
+        let result_xy = (dilated_xy >> 31 | dilated_xy) as u32;
+    
+        let dilated_zw = ((coords[3] as u64) << 8 | coords[2] as u64).dilate_fixed::<4>().value();
+        let result_zw = (dilated_zw >> 29 | dilated_zw << 2) as u32;
+    
+        result_xy | result_zw
+    }
+}
+
+impl MortonEncode<2> for u64 {
+    fn morton_encode(coords: [Self; 2]) -> Self {
+        0
+    }
+}
+
+impl MortonEncode<3> for u64 {
+    fn morton_encode(coords: [Self; 3]) -> Self {
+        0
+    }
+}
+
+impl MortonEncode<4> for u64 {
+    fn morton_encode(coords: [Self; 4]) -> Self {
+        0
+    }
+}
+
+impl MortonEncode<2> for u128 {
+    fn morton_encode(coords: [Self; 2]) -> Self {
+        0
+    }
+}
+
+impl MortonEncode<3> for u128 {
+    fn morton_encode(coords: [Self; 3]) -> Self {
+        0
+    }
+}
+
+impl MortonEncode<4> for u128 {
+    fn morton_encode(coords: [Self; 4]) -> Self {
+        0
+    }
+}
+
+impl MortonEncode<2> for usize {
+    fn morton_encode(coords: [Self; 2]) -> Self {
+        #[cfg(target_pointer_width = "16")]
+        return u16::morton_encode(coords.map(|c| c as u16)) as Self;
+        #[cfg(target_pointer_width = "32")]
+        return u32::morton_encode(coords.map(|c| c as u32)) as Self;
+        #[cfg(target_pointer_width = "64")]
+        return u64::morton_encode(coords.map(|c| c as u64)) as Self;
+    }
+}
+
+impl MortonEncode<3> for usize {
+    fn morton_encode(coords: [Self; 3]) -> Self {
+        #[cfg(target_pointer_width = "16")]
+        return u16::morton_encode(coords.map(|c| c as u16)) as Self;
+        #[cfg(target_pointer_width = "32")]
+        return u32::morton_encode(coords.map(|c| c as u32)) as Self;
+        #[cfg(target_pointer_width = "64")]
+        return u64::morton_encode(coords.map(|c| c as u64)) as Self;
+    }
+}
+
+impl MortonEncode<4> for usize {
+    fn morton_encode(coords: [Self; 4]) -> Self {
+        #[cfg(target_pointer_width = "16")]
+        return u16::morton_encode(coords.map(|c| c as u16)) as Self;
+        #[cfg(target_pointer_width = "32")]
+        return u32::morton_encode(coords.map(|c| c as u32)) as Self;
+        #[cfg(target_pointer_width = "64")]
+        return u64::morton_encode(coords.map(|c| c as u64)) as Self;
+    }
+}
+
 #[cfg(test)]
 pub(crate) mod tests {
     extern crate std;
@@ -390,6 +383,9 @@ pub(crate) mod tests {
                 }
 
                 // Transform coords to index (should be the original index)
+                if SFC::from_coords(coords).index().to_usize() != i {
+                    println!("OH :(");
+                }
                 assert_eq!(SFC::from_coords(coords).index().to_usize(), i);
             }
         }

@@ -47,7 +47,7 @@
 //! # Supported Curves
 //! * [Morton]
 //!   * A Morton, or Z-Order, curve implementation
-//!   * Extremely low CPU cost (currently the fastest morton implementation)
+//!   * Extremely low CPU cost
 //! * [Hilbert]
 //!   * A Hilbert curve implementation
 //!   * Low CPU cost (on a par with the current fastest crate, [Fast Hilbert](https://crates.io/crates/fast_hilbert))
@@ -119,7 +119,7 @@ impl CurveCoord for u128 {}
 impl CurveCoord for usize {}
 
 /// Trait wrapper for indices
-pub trait CurveIndex: dilate::DilatableType + NumTraits + MortonEncode {}
+pub trait CurveIndex: dilate::DilatableType + NumTraits + MortonEncode<2> + MortonEncode<3> + MortonEncode<4> {}
 
 impl CurveIndex for u8 {}
 impl CurveIndex for u16 {}

@@ -101,26 +101,31 @@ where
         Self(index)
     }
 
-    #[inline]
+    #[inline(never)]
     fn from_coords(coords: [Self::Coord; D]) -> Self {
         debug_assert!(
             *coords.iter().max().unwrap() <= Self::COORD_MAX,
             "Parameter 'coords' contains a value which exceeds maximum"
         );
 
-//        let coords = coords.map(|c| DM::to_dilated(c));
-
-        Self(match D {
-            2 => DM::Dilated::morton_encode_d2(coords.map(|c| DM::to_dilated(c))),
-            3 => DM::Dilated::morton_encode_d3(coords.map(|c| DM::to_dilated(c))),
-            4 => DM::Dilated::morton_encode_d4(coords.map(|c| DM::to_dilated(c))),
-            _ => coords
-                .into_iter()
-                .enumerate()
-                .fold(Self::Index::zero(), |v, (i, c)| {
-                    v.bit_or(DM::dilate(c).value().shl(i))
-                }),
-        })
+        if D <= 4 {
+            let coords = coords.map(|c| DM::to_dilated(c));
+            Self(match D {
+                2 => <Self::Index as MortonEncode<2>>::morton_encode([coords[0], coords[1]]),
+                3 => <Self::Index as MortonEncode<3>>::morton_encode([coords[0], coords[1], coords[2]]),
+                4 => <Self::Index as MortonEncode<4>>::morton_encode([coords[0], coords[1], coords[2], coords[3]]),
+                _ => unreachable!(),
+            })
+        } else {
+            Self(
+                coords
+                    .into_iter()
+                    .enumerate()
+                    .fold(Self::Index::zero(), |v, (i, c)| {
+                        v.bit_or(DM::dilate(c).value().shl(i))
+                    }),
+            )
+        }
     }
 
     #[inline]
