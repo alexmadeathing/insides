@@ -174,26 +174,24 @@ where
         debug_assert!(axis < D, "Parameter 'axis' exceeds maximum");
 
         let coord = DilatedInt::<DM>::new(self.0.shr(axis).bit_and(DM::DILATED_MAX));
-        let coord = match direction {
+        match direction {
             QueryDirection::Positive => {
                 if coord.value() < DM::DILATED_MAX {
-                    Some(coord.add_one())
+                    let index = self.0.bit_and(DM::DILATED_MAX.shl(axis).bit_not());
+                    Some(Self(index.bit_or(coord.add_one().value().shl(axis))))
                 } else {
                     None
                 }
             }
             QueryDirection::Negative => {
                 if coord.value() > NumTraits::zero() {
-                    Some(coord.sub_one())
+                    let index = self.0.bit_and(DM::DILATED_MAX.shl(axis).bit_not());
+                    Some(Self(index.bit_or(coord.sub_one().value().shl(axis))))
                 } else {
                     None
                 }
             }
-        };
-        coord.map(|coord| {
-            let index = self.0.bit_and(DM::DILATED_MAX.shl(axis).bit_not());
-            Self(index.bit_or(coord.value().shl(axis)))
-        })
+        }
     }
 
     #[inline]
@@ -207,6 +205,44 @@ where
         };
         let index = self.0.bit_and(DM::DILATED_MAX.shl(axis).bit_not());
         Self(index.bit_or(coord.value().shl(axis)))
+    }
+
+    fn neighbour_on_corner(&self, axes: [QueryDirection; D]) -> Option<Self> {
+        // TODO can we improve on this? Seems like a lot of processing...
+        let mut index = Self::Index::zero();
+        for (axis, direction) in axes.into_iter().enumerate() {
+            let coord = DilatedInt::<DM>::new(self.0.shr(axis).bit_and(DM::DILATED_MAX));
+            let coord = match direction {
+                QueryDirection::Positive => {
+                    if coord.value() >= DM::DILATED_MAX {
+                        return None;
+                    }
+                    coord.add_one()
+                }
+                QueryDirection::Negative => {
+                    if coord.value() == NumTraits::zero() {
+                        return None;
+                    }
+                    coord.sub_one()
+                }
+            };
+            index = index.bit_or(coord.value().shl(axis));
+        }
+        Some(Self(index))
+    }
+
+    fn neighbour_on_corner_wrapping(&self, axes: [QueryDirection; D]) -> Self {
+        // TODO Can we improve on this? Seems like a lot of processing...
+        let mut index = Self::Index::zero();
+        for (axis, direction) in axes.into_iter().enumerate() {
+            let coord = DilatedInt::<DM>::new(self.0.shr(axis).bit_and(DM::DILATED_MAX));
+            let coord = match direction {
+                QueryDirection::Positive => coord.add_one(),
+                QueryDirection::Negative => coord.sub_one(),
+            };
+            index = index.bit_or(coord.value().shl(axis));
+        }
+        Self(index)
     }
 }
 
