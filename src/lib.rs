@@ -111,11 +111,11 @@ impl CurveIndex for usize {}
 /// Direction to search within an axis when making queries
 #[derive(Clone, Copy, Debug)]
 pub enum QueryDirection {
-    /// Search in a positive direction along an axis relative to the source location
-    Positive,
-
     /// Search in a negative direction along an axis relative to the source location
     Negative,
+
+    /// Search in a positive direction along an axis relative to the source location
+    Positive,
 }
 
 impl QueryDirection {
@@ -427,4 +427,7 @@ pub trait Neighbours<const D: usize>: SpaceFillingCurve<D> {
     /// assert_eq!(edge_location.neighbour_on_axis_wrapping(1, QueryDirection::Positive).coords(), [0, 0]);
     /// ```
     fn neighbour_on_axis_wrapping(&self, axis: usize, direction: QueryDirection) -> Self;
+
+    fn neighbour_on_corner(&self, axes: [QueryDirection; D]) -> Option<Self>;
+    fn neighbour_on_corner_wrapping(&self, axes: [QueryDirection; D]) -> Self;
 }
