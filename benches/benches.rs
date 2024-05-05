@@ -362,32 +362,32 @@ fn benchmark_hilbert_2d(c: &mut Criterion) {
         c,
         "fast_hilbert (u16)",
         coord_length,
-        |i| black_box(fast_hilbert::h2xy::<u8>(black_box(i as u16))),
-        |x, y| black_box(fast_hilbert::xy2h::<u8>(black_box(x as u8), black_box(y as u8))),
+        |i| black_box(fast_hilbert::h2xy::<u8>(black_box(i as u16), black_box(coord_bits as u8))),
+        |x, y| black_box(fast_hilbert::xy2h::<u8>(black_box(x as u8), black_box(y as u8), black_box(coord_bits as u8))),
     );
 
     benchmark_coords_and_indices_2d(
         c,
         "fast_hilbert (u32)",
         coord_length,
-        |i| black_box(fast_hilbert::h2xy::<u16>(black_box(i as u32))),
-        |x, y| black_box(fast_hilbert::xy2h::<u16>(black_box(x as u16), black_box(y as u16))),
+        |i| black_box(fast_hilbert::h2xy::<u16>(black_box(i as u32), black_box(coord_bits as u8))),
+        |x, y| black_box(fast_hilbert::xy2h::<u16>(black_box(x as u16), black_box(y as u16), black_box(coord_bits as u8))),
     );
 
     benchmark_coords_and_indices_2d(
         c,
         "fast_hilbert (u64)",
         coord_length,
-        |i| black_box(fast_hilbert::h2xy::<u32>(black_box(i as u64))),
-        |x, y| black_box(fast_hilbert::xy2h::<u32>(black_box(x as u32), black_box(y as u32))),
+        |i| black_box(fast_hilbert::h2xy::<u32>(black_box(i as u64), black_box(coord_bits as u8))),
+        |x, y| black_box(fast_hilbert::xy2h::<u32>(black_box(x as u32), black_box(y as u32), black_box(coord_bits as u8))),
     );
 
     benchmark_coords_and_indices_2d(
         c,
         "fast_hilbert (u128)",
         coord_length,
-        |i| black_box(fast_hilbert::h2xy::<u64>(black_box(i as u128))),
-        |x, y| black_box(fast_hilbert::xy2h::<u64>(black_box(x as u64), black_box(y as u64))),
+        |i| black_box(fast_hilbert::h2xy::<u64>(black_box(i as u128), black_box(coord_bits as u8))),
+        |x, y| black_box(fast_hilbert::xy2h::<u64>(black_box(x as u64), black_box(y as u64), black_box(coord_bits as u8))),
     );
 
     benchmark_coords_and_indices_2d(
@@ -414,6 +414,8 @@ fn benchmark_hilbert_2d(c: &mut Criterion) {
         |x, y| black_box(hilbert_index::ToHilbertIndex::to_hilbert_index(&black_box([x, y]), black_box(coord_bits))),
     );
 
+    // This is causing compile errors
+    /*
     benchmark_coords_and_indices_2d(
         c,
         "hilbert (BigUInt)",
@@ -421,6 +423,7 @@ fn benchmark_hilbert_2d(c: &mut Criterion) {
         |i| black_box(hilbert::Point::new_from_hilbert_index(0, &black_box(num::BigUint::from(i)), black_box(coord_bits), black_box(2))),
         |x, y| black_box(black_box(hilbert::Point::new(0, &[x as u32, y as u32])).hilbert_transform(black_box(coord_bits))),
     );
+    */
 }
 
 fn benchmark_hilbert_3d(c: &mut Criterion) {
@@ -497,6 +500,8 @@ fn benchmark_hilbert_3d(c: &mut Criterion) {
         },
     );
 
+    // This is causing compile errors
+    /*
     benchmark_coords_and_indices_3d(
         c,
         "hilbert (BigUInt)",
@@ -510,6 +515,7 @@ fn benchmark_hilbert_3d(c: &mut Criterion) {
             black_box(black_box(hilbert::Point::new(0, &[x as u32, y as u32, z as u32])).hilbert_transform(black_box(coord_bits)));
         },
     );
+    */
 }
 
 fn benchmark_hilbert_4d(c: &mut Criterion) {
@@ -586,6 +592,8 @@ fn benchmark_hilbert_4d(c: &mut Criterion) {
         },
     );
 
+    // This is causing compile errors
+    /*
     benchmark_coords_and_indices_4d(
         c,
         "hilbert (BigUInt)",
@@ -599,6 +607,7 @@ fn benchmark_hilbert_4d(c: &mut Criterion) {
             black_box(black_box(hilbert::Point::new(0, &[x as u32, y as u32, z as u32, w as u32])).hilbert_transform(black_box(coord_bits)));
         },
     );
+    */
 }
 
 pub fn criterion_benchmark(c: &mut Criterion) {
