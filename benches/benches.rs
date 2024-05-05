@@ -34,7 +34,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("fast_hilbert: 2d hilbert index to coords", |b| {
         b.iter(|| {
             for i in 0..index_length {
-                black_box(fast_hilbert::h2xy::<u32>(black_box(i as u64)));
+                black_box(fast_hilbert::h2xy::<u32>(black_box(i as u64), black_box(coord_bits as u8)));
             }
         })
     });
@@ -65,13 +65,14 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         })
     });*/
 
-    c.bench_function("hilbert: 2d hilbert index to coords", |b| {
+    // This is causing compile issues.
+/*    c.bench_function("hilbert: 2d hilbert index to coords", |b| {
         b.iter(|| {
             for i in 0..index_length {
                 black_box(hilbert::Point::new_from_hilbert_index(0, &black_box(num::BigUint::from(i)), black_box(coord_bits), black_box(2)));
             }
         })
-    });
+    }); */
 
     c.bench_function("insides: 2d hilbert coords to index", |b| {
         b.iter(|| {
@@ -87,7 +88,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         b.iter(|| {
             for x in 0..coord_length {
                 for y in 0..coord_length {
-                    black_box(fast_hilbert::xy2h::<u32>(black_box(x as u32), black_box(y as u32)));
+                    black_box(fast_hilbert::xy2h::<u32>(black_box(x as u32), black_box(y as u32), black_box(coord_bits as u8)));
                 }
             }
         })
@@ -123,7 +124,8 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         })
     });
 
-    c.bench_function("hilbert: 2d hilbert coords to index", |b| {
+    // This is causing compile issues.
+/*    c.bench_function("hilbert: 2d hilbert coords to index", |b| {
         b.iter(|| {
             for x in 0..coord_length {
                 for y in 0..coord_length {
@@ -131,7 +133,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
                 }
             }
         })
-    });
+    }); */
 }
 
 criterion_group!(

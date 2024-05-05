@@ -211,6 +211,14 @@ where
     }
 }
 
+/// A Morton encoded space filling curve implementation using the Expand dilation method
+// Not available until: https://github.com/rust-lang/rust/issues/112792
+//pub type MortonExpand<T, const D: usize> = Morton<Expand<T, D>, D> where T: CurveIndex;
+
+/// A Morton encoded space filling curve implementation using the Fixed dilation method
+// Not available until: https://github.com/rust-lang/rust/issues/112792
+//pub type MortonFixed<T, const D: usize> = Morton<Fixed<T, D>, D> where T: CurveIndex;
+
 #[cfg(test)]
 mod tests {
     use crate::internal::tests::{test_curve, test_curve_neighbours, test_curve_siblings};

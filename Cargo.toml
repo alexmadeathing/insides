@@ -33,12 +33,12 @@ lazy_static = "1.4.0" # For test data
 paste = "1.0.6" # For generation of multi-dimensional, multi-type, test names
 
 # The rest of these dev dependencies are for benchmarking
-criterion = { version = "0.3.5", features = ["html_reports"] }
-fast_hilbert = "1.0.0"
+criterion = { version = "0.5.1", features = ["html_reports"] }
+fast_hilbert = "2.0.0"
 hilbert_curve = "0.2.0"
 hilbert_2d = "1.0.0"
 hilbert_index = "0.2.0"
-hilbert = "0.1.2"
+#hilbert = "0.1.2" # Not compiling
 num = "0.4.0"
 
 [[bench]]
