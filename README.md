@@ -17,9 +17,7 @@ supporting manipulation methods.
 
 # Supported Curves
 * Morton - A morton, or Z-order, curve implementation
-
-We currently only support Morton Encoding, but the interface will support
-other curve implementations, such as Hilbert - and we have a branch nearly ready for integration!
+* Hilbert - Not yet published to crates.io, but you can use it here!
 
 # Features
 * High performance - Ready to use in performance sensitive contexts
