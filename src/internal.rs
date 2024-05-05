@@ -302,6 +302,7 @@ pub(crate) mod tests {
     use std::{collections::HashSet, fmt::Debug, marker::PhantomData, panic::catch_unwind};
 
     const MAX_TESTED_INDICES: usize = 100000;
+    const MAX_PERMUTATIONS: usize = 10000;
 
     pub struct SpaceFillingCurveTester<SFC, const D: usize>(PhantomData<SFC>)
     where
@@ -543,6 +544,81 @@ pub(crate) mod tests {
                 }
             }
         }
+        
+        pub fn neighbour_on_corner_is_correct()
+        where
+            SFC: Neighbours<D>,
+            <SFC as SpaceFillingCurve<D>>::Coord: Debug,
+        {
+            let num_indices: usize = SFC::INDEX_MAX.to_usize().min(MAX_TESTED_INDICES / D);
+            for i in 0..num_indices {
+                // It's a shame that we have to rely on other SFC methods to test this trait... not sure of a better solution yet
+                let sfc = SFC::from_index(NumTraits::from_usize(i));
+                let coords = sfc.coords();
+
+                let num_corners = (1usize << D).min(MAX_PERMUTATIONS);
+                for corner in 0..num_corners {
+                    let test_axes = core::array::from_fn(|i| if (corner >> i) & 0x1 != 0 { QueryDirection::Positive } else { QueryDirection::Negative });
+
+                    let mut expected_coords = coords;
+                    let mut valid = true;
+                    for axis in 0..D {
+                        if matches!(test_axes[axis], QueryDirection::Positive) {
+                            if coords[axis] < SFC::COORD_MAX {
+                                expected_coords[axis] = coords[axis].add(NumTraits::one());
+                            } else {
+                                valid = false;
+                            }
+                        } else {
+                            if coords[axis] > NumTraits::zero() {
+                                expected_coords[axis] = coords[axis].sub(NumTraits::one());
+                            } else {
+                                valid = false;
+                            }
+                        }
+                    }
+                    let expected = valid.then(|| SFC::from_coords(expected_coords));
+                    assert_eq!(sfc.neighbour_on_corner(test_axes), expected);
+                }
+            }
+        }
+        
+        pub fn neighbour_on_corner_wrapping_is_correct()
+        where
+            SFC: Neighbours<D>,
+            <SFC as SpaceFillingCurve<D>>::Coord: Debug,
+        {
+            let num_indices: usize = SFC::INDEX_MAX.to_usize().min(MAX_TESTED_INDICES / D);
+            for i in 0..num_indices {
+                // It's a shame that we have to rely on other SFC methods to test this trait... not sure of a better solution yet
+                let sfc = SFC::from_index(NumTraits::from_usize(i));
+                let coords = sfc.coords();
+
+                let num_corners = (1usize << D).min(MAX_PERMUTATIONS);
+                for corner in 0..num_corners {
+                    let test_axes = core::array::from_fn(|i| if (corner >> i) & 0x1 != 0 { QueryDirection::Positive } else { QueryDirection::Negative });
+
+                    let mut expected_coords = coords;
+                    for axis in 0..D {
+                        if matches!(test_axes[axis], QueryDirection::Positive) {
+                            if coords[axis] < SFC::COORD_MAX {
+                                expected_coords[axis] = coords[axis].add(NumTraits::one());
+                            } else {
+                                expected_coords[axis] = NumTraits::zero();
+                            }
+                        } else {
+                            if coords[axis] > NumTraits::zero() {
+                                expected_coords[axis] = coords[axis].sub(NumTraits::one());
+                            } else {
+                                expected_coords[axis] = SFC::COORD_MAX;
+                            }
+                        }
+                    }
+                    let expected = SFC::from_coords(expected_coords);
+                    assert_eq!(sfc.neighbour_on_corner_wrapping(test_axes), expected);
+                }
+            }
+        }
     }
 
     macro_rules! test_curve {
@@ -631,6 +707,16 @@ pub(crate) mod tests {
                     #[test]
                     fn neighbour_on_axis_wrapping_is_correct() {
                         SpaceFillingCurveTester::<TestedCurve, $d>::neighbour_on_axis_wrapping_is_correct();
+                    }
+
+                    #[test]
+                    fn neighbour_on_corner_is_correct() {
+                        SpaceFillingCurveTester::<TestedCurve, $d>::neighbour_on_corner_is_correct();
+                    }
+
+                    #[test]
+                    fn neighbour_on_corner_wrapping_is_correct() {
+                        SpaceFillingCurveTester::<TestedCurve, $d>::neighbour_on_corner_wrapping_is_correct();
                     }
                 }
             }

@@ -1,38 +1,3 @@
-// ANTI-CAPITALIST SOFTWARE LICENSE (v 1.4)
-//
-// Copyright © 2022 Alex Blunt (alexmadeathing)
-//
-// This is anti-capitalist software, released for free use by individuals and
-// organizations that do not operate by capitalist principles.
-//
-// Permission is hereby granted, free of charge, to any person or organization
-// (the "User") obtaining a copy of this software and associated documentation
-// files (the "Software"), to use, copy, modify, merge, distribute, and/or sell
-// copies of the Software, subject to the following conditions:
-//
-// 1. The above copyright notice and this permission notice shall be included in
-// all copies or modified versions of the Software.
-//
-// 2. The User is one of the following:
-//   a. An individual person, laboring for themselves
-//   b. A non-profit organization
-//   c. An educational institution
-//   d. An organization that seeks shared profit for all of its members, and
-//      allows non-members to set the cost of their labor
-//
-// 3. If the User is an organization with owners, then all owners are workers
-// and all workers are owners with equal equity and/or equal vote.
-//
-// 4. If the User is an organization, then the User is not law enforcement or
-// military, or working for or under either.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT EXPRESS OR IMPLIED WARRANTY OF ANY
-// KIND, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
-// BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-// SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 //#![no_std]
 #![warn(missing_docs)]
 #![warn(rustdoc::missing_doc_code_examples)]
@@ -131,11 +96,11 @@ impl CurveIndex for usize {}
 /// Direction to search within an axis when making queries
 #[derive(Clone, Copy, Debug)]
 pub enum QueryDirection {
-    /// Search in a positive direction along an axis relative to the source location
-    Positive,
-
     /// Search in a negative direction along an axis relative to the source location
     Negative,
+
+    /// Search in a positive direction along an axis relative to the source location
+    Positive,
 }
 
 impl QueryDirection {
@@ -377,7 +342,7 @@ pub trait Siblings<const D: usize>: SpaceFillingCurve<D> {
 pub trait Neighbours<const D: usize>: SpaceFillingCurve<D> {
     /// Get neighbour location on axis
     ///
-    /// This method gets the neighbour location in a direction along on an axis.
+    /// This method gets the neighbour location in a direction along an axis.
     /// It is equvalent to adding 1 to or subtracting 1 from the encoded
     /// coordinate.
     ///
@@ -413,7 +378,7 @@ pub trait Neighbours<const D: usize>: SpaceFillingCurve<D> {
 
     /// Get neighbour location on axis with wrapping
     ///
-    /// This method gets the neighbour location in a direction along on an axis.
+    /// This method gets the neighbour location in a direction along an axis.
     /// It is equvalent to adding 1 to or subtracting 1 from the encoded
     /// coordinate.
     ///
@@ -447,4 +412,75 @@ pub trait Neighbours<const D: usize>: SpaceFillingCurve<D> {
     /// assert_eq!(edge_location.neighbour_on_axis_wrapping(1, QueryDirection::Positive).coords(), [0, 0]);
     /// ```
     fn neighbour_on_axis_wrapping(&self, axis: usize, direction: QueryDirection) -> Self;
+
+    /// Get neighbour location on corner
+    ///
+    /// This method gets the neighbour location in a direction along each axis. This results finding the
+    /// adjecant diagonal locations (the corners). It is equvalent to adding 1 to or subtracting 1 from
+    /// each axis of the coordinates.
+    ///
+    /// If the neighbour would cause a coordinate to wrap, this method returns
+    /// None instead. For a wrapping version, please see
+    /// [neighbour_on_corner_wrapping()](Neighbours::neighbour_on_corner_wrapping()).
+    ///
+    /// Unlike the [Siblings] implementation, methods in the Neighbours trait
+    /// may cross cluster boundaries.
+    ///
+    /// # Panics
+    /// Panics if parameter 'axis' is greater than or equal to D
+    ///
+    /// # Examples
+    /// ```rust
+    /// use insides::{*, QueryDirection::*};
+    ///
+    /// let location = Morton::<Expand<u16, 3>, 3>::from_coords([1, 2, 3]);
+    ///
+    /// assert_eq!(location.neighbour_on_corner([Negative, Negative, Negative]).unwrap().coords(), [0, 1, 2]);
+    /// assert_eq!(location.neighbour_on_corner([Positive, Positive, Positive]).unwrap().coords(), [2, 3, 4]);
+    /// 
+    /// assert_eq!(location.neighbour_on_corner([Positive, Negative, Negative]).unwrap().coords(), [2, 1, 2]);
+    /// assert_eq!(location.neighbour_on_corner([Negative, Positive, Negative]).unwrap().coords(), [0, 3, 2]);
+    /// assert_eq!(location.neighbour_on_corner([Negative, Negative, Positive]).unwrap().coords(), [0, 1, 4]);
+    ///
+    /// let edge_location = Morton::<Expand<u16, 2>, 2>::from_coords([0, u16::MAX]);
+    /// assert_eq!(edge_location.neighbour_on_corner([Negative, Negative]), None);
+    /// assert_eq!(edge_location.neighbour_on_corner([Positive, Positive]), None);
+    /// ```
+    fn neighbour_on_corner(&self, axes: [QueryDirection; D]) -> Option<Self>;
+
+    /// Get neighbour location on corner with wrapping
+    ///
+    /// This method gets the neighbour location in a direction along each axis. This results finding the
+    /// adjecant diagonal locations (the corners). It is equvalent to adding 1 to or subtracting 1 from
+    /// each axis of the coordinates.
+    ///
+    /// This method allows coordinates to wrap between zero and
+    /// [COORD_MAX](SpaceFillingCurve::COORD_MAX). For a non-wrapping version,
+    /// please see
+    /// [neighbour_on_corner()](Neighbours::neighbour_on_corner()).
+    ///
+    /// Unlike the [Siblings] implementation, methods in the Neighbours trait
+    /// may cross cluster boundaries.
+    ///
+    /// # Panics
+    /// Panics if parameter 'axis' is greater than or equal to D
+    ///
+    /// # Examples
+    /// ```rust
+    /// use insides::{*, QueryDirection::*};
+    ///
+    /// let location = Morton::<Expand<u16, 3>, 3>::from_coords([1, 2, 3]);
+    ///
+    /// assert_eq!(location.neighbour_on_corner_wrapping([Negative, Negative, Negative]).coords(), [0, 1, 2]);
+    /// assert_eq!(location.neighbour_on_corner_wrapping([Positive, Positive, Positive]).coords(), [2, 3, 4]);
+    /// 
+    /// assert_eq!(location.neighbour_on_corner_wrapping([Positive, Negative, Negative]).coords(), [2, 1, 2]);
+    /// assert_eq!(location.neighbour_on_corner_wrapping([Negative, Positive, Negative]).coords(), [0, 3, 2]);
+    /// assert_eq!(location.neighbour_on_corner_wrapping([Negative, Negative, Positive]).coords(), [0, 1, 4]);
+    ///
+    /// let edge_location = Morton::<Expand<u16, 2>, 2>::from_coords([0, u16::MAX]);
+    /// assert_eq!(edge_location.neighbour_on_corner_wrapping([Negative, Negative]).coords(), [u16::MAX, u16::MAX - 1]);
+    /// assert_eq!(edge_location.neighbour_on_corner_wrapping([Positive, Positive]).coords(), [1, 0]);
+    /// ```
+    fn neighbour_on_corner_wrapping(&self, axes: [QueryDirection; D]) -> Self;
 }

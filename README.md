@@ -1,7 +1,7 @@
 [![Crates.io](https://img.shields.io/crates/d/insides.svg)](https://crates.io/crates/insides)
-[![Anti-Capitalist Software License (v 1.4)](https://img.shields.io/badge/license-Anti--Capitalist%20(v%201.4)-brightgreen)](LICENSE.md)
 [![alexmadeathing](https://circleci.com/gh/alexmadeathing/insides.svg?style=shield)](https://app.circleci.com/pipelines/github/alexmadeathing/insides?filter=all)
-[![rustc 1.51+]][Rust 1.51]
+[![MIT License](https://img.shields.io/badge/license-MIT-brightgreen)](LICENSE-MIT)
+[![APACHE 2.0 License](https://img.shields.io/badge/license-APACHE%202.0-brightgreen)](LICENSE-APACHE)
 
 # WARNING
 This crate is in an alpha stage of development. Its interface may be subject to change.
@@ -99,10 +99,9 @@ For bugs reports, please [submit a bug report](https://github.com/alexmadeathing
 
 For feature requests, please [submit a feature request](https://github.com/alexmadeathing/insides/issues/new?assignees=&labels=enhancement&template=feature_request.md&title=).
 
-If you have ideas and want to contribute directly, please start by creating an [Idea discussion](https://github.com/alexmadeathing/insides/discussions/new) in the discussions area. Allow others to comment prior to committing to doing the work. When all parties agree on the design, the work may begin. When your code is ready to be published, please submit a pull request referring back to your Idea discussion. We are unlikely to accept a pull request that has not gone through this process, unless it is for a very small change.
+If you have ideas and want to contribute directly, pull requests are most welcome. If it's a small change just submit a pull request. If you're planning a large or breaking change, please create an [Idea discussion](https://github.com/alexmadeathing/insides/discussions/new) in the discussions area so that we can reach a concensus.
 
 # License
+Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or [MIT license](LICENSE-MIT) at your option.
 
-insides is licensed under the [Anti-Capitalist Software License (v 1.4)](https://github.com/alexmadeathing/insides/blob/main/LICENSE.md). This means it is free and open source for use by individuals and organizations that do not operate by capitalist principles.
-
-Unless explicitly stated, your contributions will be incorporated under this license.
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in this crate by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.

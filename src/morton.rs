@@ -1,38 +1,3 @@
-// ANTI-CAPITALIST SOFTWARE LICENSE (v 1.4)
-//
-// Copyright © 2022 Alex Blunt (alexmadeathing)
-//
-// This is anti-capitalist software, released for free use by individuals and
-// organizations that do not operate by capitalist principles.
-//
-// Permission is hereby granted, free of charge, to any person or organization
-// (the "User") obtaining a copy of this software and associated documentation
-// files (the "Software"), to use, copy, modify, merge, distribute, and/or sell
-// copies of the Software, subject to the following conditions:
-//
-// 1. The above copyright notice and this permission notice shall be included in
-// all copies or modified versions of the Software.
-//
-// 2. The User is one of the following:
-//   a. An individual person, laboring for themselves
-//   b. A non-profit organization
-//   c. An educational institution
-//   d. An organization that seeks shared profit for all of its members, and
-//      allows non-members to set the cost of their labor
-//
-// 3. If the User is an organization with owners, then all owners are workers
-// and all workers are owners with equal equity and/or equal vote.
-//
-// 4. If the User is an organization, then the User is not law enforcement or
-// military, or working for or under either.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT EXPRESS OR IMPLIED WARRANTY OF ANY
-// KIND, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
-// BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
-// CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-// SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 use dilate::*;
 
 use super::{CurveCoord, CurveIndex, Neighbours, QueryDirection, Siblings, SpaceFillingCurve};
@@ -191,26 +156,24 @@ where
         debug_assert!(axis < D, "Parameter 'axis' exceeds maximum");
 
         let coord = DilatedInt::<DM>::new(self.0.shr(axis).bit_and(DM::DILATED_MAX));
-        let coord = match direction {
+        match direction {
             QueryDirection::Positive => {
                 if coord.value() < DM::DILATED_MAX {
-                    Some(coord.add_one())
+                    let index = self.0.bit_and(DM::DILATED_MAX.shl(axis).bit_not());
+                    Some(Self(index.bit_or(coord.add_one().value().shl(axis))))
                 } else {
                     None
                 }
             }
             QueryDirection::Negative => {
                 if coord.value() > NumTraits::zero() {
-                    Some(coord.sub_one())
+                    let index = self.0.bit_and(DM::DILATED_MAX.shl(axis).bit_not());
+                    Some(Self(index.bit_or(coord.sub_one().value().shl(axis))))
                 } else {
                     None
                 }
             }
-        };
-        coord.map(|coord| {
-            let index = self.0.bit_and(DM::DILATED_MAX.shl(axis).bit_not());
-            Self(index.bit_or(coord.value().shl(axis)))
-        })
+        }
     }
 
     #[inline]
@@ -224,6 +187,44 @@ where
         };
         let index = self.0.bit_and(DM::DILATED_MAX.shl(axis).bit_not());
         Self(index.bit_or(coord.value().shl(axis)))
+    }
+
+    fn neighbour_on_corner(&self, axes: [QueryDirection; D]) -> Option<Self> {
+        // TODO can we improve on this? Seems like a lot of processing...
+        let mut index = Self::Index::zero();
+        for (axis, direction) in axes.into_iter().enumerate() {
+            let coord = DilatedInt::<DM>::new(self.0.shr(axis).bit_and(DM::DILATED_MAX));
+            let coord = match direction {
+                QueryDirection::Positive => {
+                    if coord.value() >= DM::DILATED_MAX {
+                        return None;
+                    }
+                    coord.add_one()
+                }
+                QueryDirection::Negative => {
+                    if coord.value() == NumTraits::zero() {
+                        return None;
+                    }
+                    coord.sub_one()
+                }
+            };
+            index = index.bit_or(coord.value().shl(axis));
+        }
+        Some(Self(index))
+    }
+
+    fn neighbour_on_corner_wrapping(&self, axes: [QueryDirection; D]) -> Self {
+        // TODO Can we improve on this? Seems like a lot of processing...
+        let mut index = Self::Index::zero();
+        for (axis, direction) in axes.into_iter().enumerate() {
+            let coord = DilatedInt::<DM>::new(self.0.shr(axis).bit_and(DM::DILATED_MAX));
+            let coord = match direction {
+                QueryDirection::Positive => coord.add_one(),
+                QueryDirection::Negative => coord.sub_one(),
+            };
+            index = index.bit_or(coord.value().shl(axis));
+        }
+        Self(index)
     }
 }
 
