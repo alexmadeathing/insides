@@ -94,7 +94,7 @@ impl CurveIndex for u128 {}
 impl CurveIndex for usize {}
 
 /// Direction to search within an axis when making queries
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum QueryDirection {
     /// Search in a negative direction along an axis relative to the source location
     Negative,
@@ -109,8 +109,8 @@ impl QueryDirection {
     where
         I: NumTraits,
     {
-        if matches!(self, Self::Positive) {
-            index.bit_or(<I as NumTraits>::one().shl(axis))
+        if self == Self::Positive {
+            index.bit_or(I::one().shl(axis))
         } else {
             index
         }

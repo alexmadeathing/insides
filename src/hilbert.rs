@@ -670,6 +670,14 @@ where
     }
 }
 
+/// A Hilbert encoded space filling curve implementation using the Expand dilation method
+// Not available until: https://github.com/rust-lang/rust/issues/112792
+//pub type HilbertExpand<T, const D: usize> = Hilbert<Expand<T, D>, D> where T: CurveIndex;
+
+/// A Hilbert encoded space filling curve implementation using the Expand dilation method
+// Not available until: https://github.com/rust-lang/rust/issues/112792
+//pub type HilbertFixed<T, const D: usize> = Hilbert<Fixed<T, D>, D> where T: CurveIndex;
+
 #[cfg(test)]
 mod tests {
     extern crate std;
