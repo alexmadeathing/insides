@@ -1,0 +1,497 @@
+2d index to coords: insides (morton u16)
+                        time:   [126.70 µs 127.49 µs 128.33 µs]
+                        change: [-1.1582% -0.3050% +0.6353%] (p = 0.52 > 0.05)
+                        No change in performance detected.
+Found 113 outliers among 1000 measurements (11.30%)
+  25 (2.50%) high mild
+  88 (8.80%) high severe
+
+2d coords to index: insides (morton u16)
+                        time:   [122.15 µs 122.98 µs 123.87 µs]
+                        change: [+8.5464% +9.8426% +11.128%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 101 outliers among 1000 measurements (10.10%)
+  29 (2.90%) high mild
+  72 (7.20%) high severe
+
+2d index to coords: insides (morton u32)
+                        time:   [120.27 µs 121.03 µs 121.82 µs]
+                        change: [-1.4154% -0.5014% +0.3958%] (p = 0.28 > 0.05)
+                        No change in performance detected.
+Found 117 outliers among 1000 measurements (11.70%)
+  28 (2.80%) high mild
+  89 (8.90%) high severe
+
+2d coords to index: insides (morton u32)
+                        time:   [136.94 µs 137.84 µs 138.79 µs]
+                        change: [-0.6312% +0.3178% +1.2961%] (p = 0.52 > 0.05)
+                        No change in performance detected.
+Found 101 outliers among 1000 measurements (10.10%)
+  19 (1.90%) high mild
+  82 (8.20%) high severe
+
+2d index to coords: insides (morton u64)
+                        time:   [152.90 µs 153.92 µs 154.99 µs]
+                        change: [-0.5068% +0.5926% +1.6722%] (p = 0.29 > 0.05)
+                        No change in performance detected.
+Found 83 outliers among 1000 measurements (8.30%)
+  19 (1.90%) high mild
+  64 (6.40%) high severe
+
+2d coords to index: insides (morton u64)
+                        time:   [767.74 µs 768.93 µs 770.15 µs]
+                        change: [+749.90% +753.68% +757.29%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 79 outliers among 1000 measurements (7.90%)
+  73 (7.30%) high mild
+  6 (0.60%) high severe
+
+2d index to coords: insides (morton u128)
+                        time:   [343.88 µs 345.81 µs 347.84 µs]
+                        change: [+0.9402% +1.6871% +2.4961%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 97 outliers among 1000 measurements (9.70%)
+  18 (1.80%) high mild
+  79 (7.90%) high severe
+
+2d coords to index: insides (morton u128)
+                        time:   [413.35 µs 416.52 µs 419.87 µs]
+                        change: [+155.46% +157.33% +159.33%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 134 outliers among 1000 measurements (13.40%)
+  28 (2.80%) high mild
+  106 (10.60%) high severe
+
+2d index to coords: morton (u32)
+                        time:   [79.241 µs 79.783 µs 80.354 µs]
+                        change: [+0.7154% +1.6239% +2.5026%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 92 outliers among 1000 measurements (9.20%)
+  28 (2.80%) high mild
+  64 (6.40%) high severe
+
+2d coords to index: morton (u32)
+                        time:   [122.72 µs 123.44 µs 124.20 µs]
+                        change: [+3.9691% +4.7036% +5.4562%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 94 outliers among 1000 measurements (9.40%)
+  29 (2.90%) high mild
+  65 (6.50%) high severe
+
+3d index to coords: insides (morton u16)
+                        time:   [161.74 µs 162.52 µs 163.35 µs]
+                        change: [-0.5922% +0.0987% +0.8006%] (p = 0.78 > 0.05)
+                        No change in performance detected.
+Found 69 outliers among 1000 measurements (6.90%)
+  20 (2.00%) high mild
+  49 (4.90%) high severe
+
+3d coords to index: insides (morton u16)
+                        time:   [176.18 µs 177.38 µs 178.67 µs]
+                        change: [+2.1368% +3.0353% +3.9419%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 115 outliers among 1000 measurements (11.50%)
+  35 (3.50%) high mild
+  80 (8.00%) high severe
+
+3d index to coords: insides (morton u32)
+                        time:   [141.57 µs 142.28 µs 143.05 µs]
+                        change: [-0.9134% -0.0192% +0.8619%] (p = 0.97 > 0.05)
+                        No change in performance detected.
+Found 125 outliers among 1000 measurements (12.50%)
+  47 (4.70%) high mild
+  78 (7.80%) high severe
+
+3d coords to index: insides (morton u32)
+                        time:   [374.89 µs 376.15 µs 377.45 µs]
+                        change: [-1.7534% -1.2276% -0.7087%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 103 outliers among 1000 measurements (10.30%)
+  26 (2.60%) high mild
+  77 (7.70%) high severe
+
+3d index to coords: insides (morton u64)
+                        time:   [185.68 µs 186.65 µs 187.67 µs]
+                        change: [+0.8730% +1.5887% +2.2735%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 122 outliers among 1000 measurements (12.20%)
+  26 (2.60%) high mild
+  96 (9.60%) high severe
+
+3d coords to index: insides (morton u64)
+                        time:   [294.45 µs 295.96 µs 297.55 µs]
+                        change: [+147.27% +148.84% +150.46%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 106 outliers among 1000 measurements (10.60%)
+  27 (2.70%) high mild
+  79 (7.90%) high severe
+
+3d index to coords: insides (morton u128)
+                        time:   [542.35 µs 544.65 µs 547.04 µs]
+                        change: [+1.3687% +2.1189% +2.8678%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 116 outliers among 1000 measurements (11.60%)
+  27 (2.70%) high mild
+  89 (8.90%) high severe
+
+3d coords to index: insides (morton u128)
+                        time:   [649.81 µs 654.61 µs 659.67 µs]
+                        change: [+194.66% +197.24% +199.63%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 117 outliers among 1000 measurements (11.70%)
+  23 (2.30%) high mild
+  94 (9.40%) high severe
+
+4d index to coords: insides (morton u16)
+                        time:   [264.52 µs 266.37 µs 268.30 µs]
+                        change: [+0.6816% +1.5866% +2.4405%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 126 outliers among 1000 measurements (12.60%)
+  31 (3.10%) high mild
+  95 (9.50%) high severe
+
+4d coords to index: insides (morton u16)
+                        time:   [231.80 µs 233.45 µs 235.18 µs]
+                        change: [-28.729% -27.926% -27.171%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 127 outliers among 1000 measurements (12.70%)
+  21 (2.10%) high mild
+  106 (10.60%) high severe
+
+4d index to coords: insides (morton u32)
+                        time:   [304.93 µs 306.32 µs 307.78 µs]
+                        change: [+1.2399% +1.7523% +2.3569%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 119 outliers among 1000 measurements (11.90%)
+  33 (3.30%) high mild
+  86 (8.60%) high severe
+
+4d coords to index: insides (morton u32)
+                        time:   [1.3300 ms 1.3327 ms 1.3355 ms]
+                        change: [-10.893% -10.672% -10.445%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 30 outliers among 1000 measurements (3.00%)
+  30 (3.00%) high mild
+
+4d index to coords: insides (morton u64)
+                        time:   [342.04 µs 344.76 µs 347.63 µs]
+                        change: [+3.8334% +4.9626% +6.0525%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 119 outliers among 1000 measurements (11.90%)
+  46 (4.60%) high mild
+  73 (7.30%) high severe
+
+4d coords to index: insides (morton u64)
+                        time:   [509.94 µs 514.74 µs 519.72 µs]
+                        change: [+73.254% +74.963% +76.735%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 132 outliers among 1000 measurements (13.20%)
+  51 (5.10%) high mild
+  81 (8.10%) high severe
+
+4d index to coords: insides (morton u128)
+                        time:   [978.59 µs 983.94 µs 989.53 µs]
+                        change: [+9.9131% +10.504% +11.122%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 123 outliers among 1000 measurements (12.30%)
+  91 (9.10%) high mild
+  32 (3.20%) high severe
+
+4d coords to index: insides (morton u128)
+                        time:   [1.6052 ms 1.6186 ms 1.6325 ms]
+                        change: [+83.061% +84.746% +86.286%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 146 outliers among 1000 measurements (14.60%)
+  50 (5.00%) high mild
+  96 (9.60%) high severe
+
+2d index to coords: insides (hilbert u16)
+                        time:   [1.8144 ms 1.8282 ms 1.8426 ms]
+                        change: [+16.548% +17.436% +18.260%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 136 outliers among 1000 measurements (13.60%)
+  41 (4.10%) high mild
+  95 (9.50%) high severe
+
+2d coords to index: insides (hilbert u16)
+                        time:   [2.3341 ms 2.3427 ms 2.3516 ms]
+                        change: [+11.883% +12.298% +12.745%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 114 outliers among 1000 measurements (11.40%)
+  34 (3.40%) high mild
+  80 (8.00%) high severe
+
+2d index to coords: insides (hilbert u32)
+                        time:   [1.6207 ms 1.6313 ms 1.6426 ms]
+                        change: [+8.1407% +8.8662% +9.6049%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 128 outliers among 1000 measurements (12.80%)
+  54 (5.40%) high mild
+  74 (7.40%) high severe
+
+2d coords to index: insides (hilbert u32)
+                        time:   [2.3273 ms 2.3394 ms 2.3520 ms]
+                        change: [+9.2193% +9.8589% +10.448%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 132 outliers among 1000 measurements (13.20%)
+  46 (4.60%) high mild
+  86 (8.60%) high severe
+
+2d index to coords: insides (hilbert u64)
+                        time:   [1.7167 ms 1.7322 ms 1.7486 ms]
+                        change: [+6.0262% +7.1798% +8.3690%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 162 outliers among 1000 measurements (16.20%)
+  34 (3.40%) high mild
+  128 (12.80%) high severe
+
+2d coords to index: insides (hilbert u64)
+                        time:   [3.0568 ms 3.0703 ms 3.0839 ms]
+                        change: [+35.026% +35.968% +36.827%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 84 outliers among 1000 measurements (8.40%)
+  80 (8.00%) high mild
+  4 (0.40%) high severe
+
+2d index to coords: insides (hilbert u128)
+                        time:   [1.8172 ms 1.8325 ms 1.8486 ms]
+                        change: [+10.507% +11.403% +12.413%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 150 outliers among 1000 measurements (15.00%)
+  41 (4.10%) high mild
+  109 (10.90%) high severe
+
+2d coords to index: insides (hilbert u128)
+                        time:   [2.5646 ms 2.5755 ms 2.5868 ms]
+                        change: [+5.6901% +6.2883% +6.8975%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 117 outliers among 1000 measurements (11.70%)
+  25 (2.50%) high mild
+  92 (9.20%) high severe
+
+2d index to coords: fast_hilbert (u16)
+                        time:   [403.77 µs 406.60 µs 409.58 µs]
+                        change: [+2.5560% +3.5339% +4.5231%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 139 outliers among 1000 measurements (13.90%)
+  34 (3.40%) high mild
+  105 (10.50%) high severe
+
+2d coords to index: fast_hilbert (u16)
+                        time:   [420.74 µs 424.35 µs 428.05 µs]
+                        change: [-0.7052% +0.1538% +1.0328%] (p = 0.73 > 0.05)
+                        No change in performance detected.
+Found 124 outliers among 1000 measurements (12.40%)
+  82 (8.20%) high mild
+  42 (4.20%) high severe
+
+2d index to coords: fast_hilbert (u32)
+                        time:   [645.57 µs 646.68 µs 647.80 µs]
+                        change: [+88.276% +88.656% +89.029%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 11 outliers among 1000 measurements (1.10%)
+  11 (1.10%) high mild
+
+2d coords to index: fast_hilbert (u32)
+                        time:   [395.74 µs 398.91 µs 402.18 µs]
+                        change: [+5.7033% +6.6443% +7.5844%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 104 outliers among 1000 measurements (10.40%)
+  30 (3.00%) high mild
+  74 (7.40%) high severe
+
+2d index to coords: fast_hilbert (u64)
+                        time:   [544.47 µs 545.90 µs 547.34 µs]
+                        change: [+3.4441% +3.7918% +4.1132%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+
+2d coords to index: fast_hilbert (u64)
+                        time:   [314.49 µs 317.26 µs 320.23 µs]
+                        change: [-14.586% -13.758% -12.865%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 117 outliers among 1000 measurements (11.70%)
+  15 (1.50%) high mild
+  102 (10.20%) high severe
+
+2d index to coords: fast_hilbert (u128)
+                        time:   [699.27 µs 701.30 µs 703.42 µs]
+                        change: [+9.9887% +10.416% +10.832%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 119 outliers among 1000 measurements (11.90%)
+  68 (6.80%) high mild
+  51 (5.10%) high severe
+
+2d coords to index: fast_hilbert (u128)
+                        time:   [437.61 µs 440.79 µs 444.06 µs]
+                        change: [-11.381% -10.633% -9.8088%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 120 outliers among 1000 measurements (12.00%)
+  13 (1.30%) high mild
+  107 (10.70%) high severe
+
+2d index to coords: hilbert_curve (usize)
+                        time:   [718.83 µs 724.37 µs 730.06 µs]
+                        change: [+3.9490% +4.7762% +5.5922%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 10 outliers among 1000 measurements (1.00%)
+  10 (1.00%) high mild
+
+2d coords to index: hilbert_curve (usize)
+                        time:   [822.67 µs 828.94 µs 835.49 µs]
+                        change: [+30.549% +31.628% +32.638%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 143 outliers among 1000 measurements (14.30%)
+  62 (6.20%) high mild
+  81 (8.10%) high severe
+
+2d index to coords: hilbert_2d (usize)
+                        time:   [601.83 µs 608.13 µs 614.68 µs]
+                        change: [+8.4739% +9.5992% +10.850%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 124 outliers among 1000 measurements (12.40%)
+  37 (3.70%) high mild
+  87 (8.70%) high severe
+
+2d coords to index: hilbert_2d (usize)
+                        time:   [760.14 µs 766.61 µs 773.42 µs]
+                        change: [+0.7551% +1.7087% +2.6759%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 109 outliers among 1000 measurements (10.90%)
+  39 (3.90%) high mild
+  70 (7.00%) high severe
+
+2d index to coords: hilbert_index (usize)
+                        time:   [1.8285 ms 1.8413 ms 1.8548 ms]
+                        change: [-2.1390% -1.3305% -0.4973%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 112 outliers among 1000 measurements (11.20%)
+  30 (3.00%) high mild
+  82 (8.20%) high severe
+
+2d coords to index: hilbert_index (usize)
+                        time:   [2.7514 ms 2.7651 ms 2.7795 ms]
+                        change: [+1.6307% +2.2733% +2.9558%] (p = 0.00 < 0.05)
+                        Performance has regressed.
+Found 93 outliers among 1000 measurements (9.30%)
+  37 (3.70%) high mild
+  56 (5.60%) high severe
+
+3d index to coords: insides (hilbert u16)
+                        time:   [1.4704 ms 1.4790 ms 1.4880 ms]
+Found 116 outliers among 1000 measurements (11.60%)
+  36 (3.60%) high mild
+  80 (8.00%) high severe
+
+3d coords to index: insides (hilbert u16)
+                        time:   [2.0788 ms 2.0866 ms 2.0947 ms]
+Found 103 outliers among 1000 measurements (10.30%)
+  59 (5.90%) high mild
+  44 (4.40%) high severe
+
+3d index to coords: insides (hilbert u32)
+                        time:   [1.4091 ms 1.4206 ms 1.4328 ms]
+Found 135 outliers among 1000 measurements (13.50%)
+  36 (3.60%) high mild
+  99 (9.90%) high severe
+
+3d coords to index: insides (hilbert u32)
+                        time:   [2.2706 ms 2.2759 ms 2.2813 ms]
+Found 95 outliers among 1000 measurements (9.50%)
+  40 (4.00%) high mild
+  55 (5.50%) high severe
+
+3d index to coords: insides (hilbert u64)
+                        time:   [1.4113 ms 1.4238 ms 1.4369 ms]
+Found 138 outliers among 1000 measurements (13.80%)
+  27 (2.70%) high mild
+  111 (11.10%) high severe
+
+3d coords to index: insides (hilbert u64)
+                        time:   [2.1725 ms 2.1817 ms 2.1912 ms]
+Found 143 outliers among 1000 measurements (14.30%)
+  97 (9.70%) high mild
+  46 (4.60%) high severe
+
+3d index to coords: insides (hilbert u128)
+                        time:   [1.9111 ms 1.9302 ms 1.9498 ms]
+Found 188 outliers among 1000 measurements (18.80%)
+  52 (5.20%) high mild
+  136 (13.60%) high severe
+
+3d coords to index: insides (hilbert u128)
+                        time:   [2.4705 ms 2.4804 ms 2.4907 ms]
+Found 121 outliers among 1000 measurements (12.10%)
+  38 (3.80%) high mild
+  83 (8.30%) high severe
+
+3d index to coords: hilbert_index (usize)
+                        time:   [1.3095 ms 1.3170 ms 1.3248 ms]
+Found 98 outliers among 1000 measurements (9.80%)
+  22 (2.20%) high mild
+  76 (7.60%) high severe
+
+3d coords to index: hilbert_index (usize)
+                        time:   [1.7545 ms 1.7613 ms 1.7683 ms]
+Found 76 outliers among 1000 measurements (7.60%)
+  29 (2.90%) high mild
+  47 (4.70%) high severe
+
+4d index to coords: insides (hilbert u16)
+                        time:   [2.1460 ms 2.1603 ms 2.1752 ms]
+Found 121 outliers among 1000 measurements (12.10%)
+  28 (2.80%) high mild
+  93 (9.30%) high severe
+
+4d coords to index: insides (hilbert u16)
+                        time:   [2.7707 ms 2.7868 ms 2.8036 ms]
+Found 107 outliers among 1000 measurements (10.70%)
+  42 (4.20%) high mild
+  65 (6.50%) high severe
+
+4d index to coords: insides (hilbert u32)
+                        time:   [2.0354 ms 2.0504 ms 2.0666 ms]
+Found 115 outliers among 1000 measurements (11.50%)
+  24 (2.40%) high mild
+  91 (9.10%) high severe
+
+4d coords to index: insides (hilbert u32)
+                        time:   [3.9158 ms 3.9266 ms 3.9378 ms]
+Found 111 outliers among 1000 measurements (11.10%)
+  66 (6.60%) high mild
+  45 (4.50%) high severe
+
+4d index to coords: insides (hilbert u64)
+                        time:   [2.0702 ms 2.0860 ms 2.1026 ms]
+Found 123 outliers among 1000 measurements (12.30%)
+  19 (1.90%) high mild
+  104 (10.40%) high severe
+
+4d coords to index: insides (hilbert u64)
+                        time:   [3.0078 ms 3.0224 ms 3.0377 ms]
+Found 115 outliers among 1000 measurements (11.50%)
+  31 (3.10%) high mild
+  84 (8.40%) high severe
+
+4d index to coords: insides (hilbert u128)
+                        time:   [2.9311 ms 2.9491 ms 2.9683 ms]
+Found 112 outliers among 1000 measurements (11.20%)
+  25 (2.50%) high mild
+  87 (8.70%) high severe
+
+4d coords to index: insides (hilbert u128)
+                        time:   [4.0213 ms 4.0406 ms 4.0606 ms]
+Found 131 outliers among 1000 measurements (13.10%)
+  24 (2.40%) high mild
+  107 (10.70%) high severe
+
+4d index to coords: hilbert_index (usize)
+                        time:   [2.3597 ms 2.3772 ms 2.3955 ms]
+Found 133 outliers among 1000 measurements (13.30%)
+  28 (2.80%) high mild
+  105 (10.50%) high severe
+
+4d coords to index: hilbert_index (usize)
+                        time:   [2.0572 ms 2.0691 ms 2.0814 ms]
+Found 118 outliers among 1000 measurements (11.80%)
+  24 (2.40%) high mild
+  94 (9.40%) high severe

@@ -1,8 +1,10 @@
+use core::array::from_fn;
+
 use dilate::*;
 
 use super::{CurveCoord, CurveIndex, Neighbours, QueryDirection, Siblings, SpaceFillingCurve};
 
-use crate::internal::{array_from_fn, NumTraits, MortonEncode};
+use crate::internal::{NumTraits, MortonEncode};
 
 /// A Morton encoded space filling curve implementation
 ///
@@ -57,7 +59,7 @@ where
     const INDEX_MAX: Self::Index = DM::DILATED_MASK;
     const D: usize = D;
 
-    #[inline]
+    #[inline(always)]
     fn from_index(index: Self::Index) -> Self {
         debug_assert!(
             index <= Self::INDEX_MAX,
@@ -66,41 +68,48 @@ where
         Self(index)
     }
 
-    #[inline(never)]
-    fn from_coords(coords: [Self::Coord; D]) -> Self {
+    #[inline(always)]
+    fn from_coords(coords: [Self::Coord; D], sfc_method: crate::SFCMethod) -> Self {
         debug_assert!(
             *coords.iter().max().unwrap() <= Self::COORD_MAX,
             "Parameter 'coords' contains a value which exceeds maximum"
         );
 
-        if D <= 4 {
-            let coords = coords.map(|c| DM::to_dilated(c));
-            Self(match D {
-                2 => <Self::Index as MortonEncode<2>>::morton_encode([coords[0], coords[1]]),
-                3 => <Self::Index as MortonEncode<3>>::morton_encode([coords[0], coords[1], coords[2]]),
-                4 => <Self::Index as MortonEncode<4>>::morton_encode([coords[0], coords[1], coords[2], coords[3]]),
-                _ => unreachable!(),
-            })
-        } else {
-            Self(
-                coords
-                    .into_iter()
-                    .enumerate()
-                    .fold(Self::Index::zero(), |v, (i, c)| {
-                        v.bit_or(DM::dilate(c).value().shl(i))
-                    }),
-            )
+        match sfc_method {
+            crate::SFCMethod::Auto | crate::SFCMethod::Naive => {
+                Self(
+                    coords
+                        .into_iter()
+                        .enumerate()
+                        .fold(Self::Index::zero(), |v, (i, c)| {
+                            v.bit_or(DM::dilate(c).value().shl(i))
+                        }),
+                )
+            },
+            crate::SFCMethod::Explicit => {
+                if D <= 4 {
+                    let coords = coords.map(|c| DM::to_dilated(c));
+                    Self(match D {
+                        2 => <Self::Index as MortonEncode<2>>::morton_encode([coords[0], coords[1]]),
+                        3 => <Self::Index as MortonEncode<3>>::morton_encode([coords[0], coords[1], coords[2]]),
+                        4 => <Self::Index as MortonEncode<4>>::morton_encode([coords[0], coords[1], coords[2], coords[3]]),
+                        _ => unreachable!(),
+                    })
+                } else {
+                    unimplemented!()
+                }
+            },
         }
     }
 
-    #[inline]
-    fn coords(&self) -> [Self::Coord; D] {
-        array_from_fn::<_, _, D>(|i| {
+    #[inline(always)]
+    fn coords(&self, sfc_method: crate::SFCMethod) -> [Self::Coord; D] {
+        from_fn::<_, D, _>(|i| {
             DilatedInt::<DM>::new(self.0.shr(i).bit_and(DM::DILATED_MAX)).undilate()
         })
     }
 
-    #[inline]
+    #[inline(always)]
     fn index(&self) -> Self::Index {
         self.0
     }
@@ -113,12 +122,12 @@ where
     DM::Undilated: CurveCoord,
     DM::Dilated: CurveIndex,
 {
-    #[inline]
+    #[inline(always)]
     fn sibling_on_axis_toggle(&self, axis: usize) -> Self {
         Self(self.0.bit_xor(Self::Index::one().shl(axis)))
     }
 
-    #[inline]
+    #[inline(always)]
     fn sibling_on_axis(&self, axis: usize, direction: QueryDirection) -> Self {
         debug_assert!(axis < D, "Parameter 'axis' exceeds maximum");
         let lower_axis_mask = Self::Index::one().shl(axis);
@@ -133,7 +142,7 @@ where
         )
     }
 
-    #[inline]
+    #[inline(always)]
     fn sibling_from_bits(&self, axis_bits: Self::Index) -> Self {
         let lower_mask = Self::Index::one().shl(D).sub(NumTraits::one());
         debug_assert!(
@@ -151,7 +160,7 @@ where
     DM::Undilated: CurveCoord,
     DM::Dilated: CurveIndex,
 {
-    #[inline]
+    #[inline(always)]
     fn neighbour_on_axis(&self, axis: usize, direction: QueryDirection) -> Option<Self> {
         debug_assert!(axis < D, "Parameter 'axis' exceeds maximum");
 
@@ -176,7 +185,7 @@ where
         }
     }
 
-    #[inline]
+    #[inline(always)]
     fn neighbour_on_axis_wrapping(&self, axis: usize, direction: QueryDirection) -> Self {
         debug_assert!(axis < D, "Parameter 'axis' exceeds maximum");
 

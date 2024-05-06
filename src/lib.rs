@@ -117,6 +117,12 @@ impl QueryDirection {
     }
 }
 
+pub enum SFCMethod {
+    Auto,
+    Naive,
+    Explicit,
+}
+
 /// Provides conversion to and from coordinates
 // I'd really love to get rid of the generic parameter here but I think it's waiting on:
 // https://github.com/rust-lang/rust/issues/76560
@@ -181,7 +187,7 @@ pub trait SpaceFillingCurve<const D: usize>: Sized + Ord + Copy + Default + Debu
     /// assert_eq!(location.index(), 0b110101);
     /// assert_eq!(location.coords(), [1, 2, 3]);
     /// ```
-    fn from_coords(coords: [Self::Coord; D]) -> Self;
+    fn from_coords(coords: [Self::Coord; D], sfc_method: SFCMethod) -> Self;
 
     /// Decode curve index into coordinates
     ///
@@ -197,7 +203,7 @@ pub trait SpaceFillingCurve<const D: usize>: Sized + Ord + Copy + Default + Debu
     /// assert_eq!(location.index(), 0b110101);
     /// assert_eq!(location.coords(), [1, 2, 3]);
     /// ```
-    fn coords(&self) -> [Self::Coord; D];
+    fn coords(&self, sfc_method: SFCMethod) -> [Self::Coord; D];
 
     /// Access curve location index
     ///
@@ -328,7 +334,7 @@ pub trait Siblings<const D: usize>: SpaceFillingCurve<D> {
     /// assert_eq!(location.sibling_on_axes([Positive, Positive, Negative]).coords(), [1, 3, 2]);
     /// assert_eq!(location.sibling_on_axes([Positive, Positive, Positive]).coords(), [1, 3, 3]);
     /// ```
-    #[inline]
+    #[inline(always)]
     fn sibling_on_axes(&self, axes: [QueryDirection; D]) -> Self {
         self.sibling_from_bits(
             (0..D)

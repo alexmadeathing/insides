@@ -1,20 +1,5 @@
 use dilate::{DilateFixed, Fixed, DilationMethod};
 
-// Can be replaced with core::array::from_fn when stabilised
-// https://github.com/rust-lang/rust/pull/94119
-#[inline]
-pub fn array_from_fn<F, T, const N: usize>(mut cb: F) -> [T; N]
-where
-    F: FnMut(usize) -> T,
-{
-    let mut idx = 0;
-    [(); N].map(|_| {
-        let res = cb(idx);
-        idx += 1;
-        res
-    })
-}
-
 pub trait NumTraits: Copy + Ord {
     // Add methods as needed
     fn zero() -> Self;
@@ -29,7 +14,6 @@ pub trait NumTraits: Copy + Ord {
     fn bit_and(self, rhs: Self) -> Self;
     fn bit_or(self, rhs: Self) -> Self;
     fn bit_xor(self, rhs: Self) -> Self;
-    fn from_u8(value: u8) -> Self;
     fn fits_in_usize(self) -> bool;
     fn from_usize(value: usize) -> Self;
     fn to_usize(self) -> usize;
@@ -44,93 +28,88 @@ pub trait NumTraits: Copy + Ord {
 macro_rules! impl_num_traits {
     ($($t:ty),+) => {$(
         impl NumTraits for $t {
-            #[inline]
+            #[inline(always)]
             fn zero() -> Self {
                 0
             }
 
-            #[inline]
+            #[inline(always)]
             fn one() -> Self {
                 1
             }
 
-            #[inline]
+            #[inline(always)]
             fn bits() -> usize {
                 Self::BITS as usize
             }
 
-            #[inline]
+            #[inline(always)]
             fn lz(self) -> usize {
                 self.leading_zeros() as usize
             }
 
-            #[inline]
+            #[inline(always)]
             fn add(self, rhs: Self) -> Self {
                 self + rhs
             }
 
-            #[inline]
+            #[inline(always)]
             fn sub(self, rhs: Self) -> Self {
                 self - rhs
             }
 
-            #[inline]
+            #[inline(always)]
             fn shl(self, amount: usize) -> Self {
                 self << amount
             }
 
-            #[inline]
+            #[inline(always)]
             fn shr(self, amount: usize) -> Self {
                 self >> amount
             }
 
-            #[inline]
+            #[inline(always)]
             fn bit_not(self) -> Self {
                 !self
             }
 
-            #[inline]
+            #[inline(always)]
             fn bit_and(self, rhs: Self) -> Self {
                 self & rhs
             }
 
-            #[inline]
+            #[inline(always)]
             fn bit_or(self, rhs: Self) -> Self {
                 self | rhs
             }
 
-            #[inline]
+            #[inline(always)]
             fn bit_xor(self, rhs: Self) -> Self {
                 self ^ rhs
             }
 
-            #[inline]
-            fn from_u8(value: u8) -> Self {
-                value as Self
-            }
-
-            #[inline]
+            #[inline(always)]
             fn fits_in_usize(self) -> bool {
                 core::mem::size_of::<Self>() <= core::mem::size_of::<usize>() || self <= (usize::MAX as Self)
             }
 
-            #[inline]
+            #[inline(always)]
             fn from_usize(value: usize) -> Self {
                 value as Self
             }
 
-            #[inline]
+            #[inline(always)]
             fn to_usize(self) -> usize {
                 self as usize
             }
 
-            #[inline]
+            #[inline(always)]
             #[cfg(test)]
             fn max_value() -> Self {
                 <$t>::MAX
             }
 
-            #[inline]
+            #[inline(always)]
             #[cfg(test)]
             fn distance_sqr(self, rhs: Self) -> usize {
                 let a = self as i32;
@@ -149,6 +128,7 @@ pub trait MortonEncode<const D: usize>: Copy {
 }
 
 impl MortonEncode<2> for u8 {
+    #[inline(always)]
     fn morton_encode(coords: [Self; 2]) -> Self {
         let dilated = ((coords[1] as u16) << 4 | coords[0] as u16).dilate_fixed::<2>().value();
         (dilated >> 7 | dilated) as u8
@@ -156,6 +136,7 @@ impl MortonEncode<2> for u8 {
 }
 
 impl MortonEncode<3> for u8 {
+    #[inline(always)]
     fn morton_encode(coords: [Self; 3]) -> Self {
         let dilated = ((coords[2] as u32) << 4 | (coords[1] as u32) << 2 | coords[0] as u32).dilate_fixed::<3>().value();
         (dilated >> 10 | dilated >> 5 | dilated) as u8 & 0x3F
@@ -163,6 +144,7 @@ impl MortonEncode<3> for u8 {
 }
 
 impl MortonEncode<4> for u8 {
+    #[inline(always)]
     fn morton_encode(coords: [Self; 4]) -> Self {
         let dilated = ((coords[3] as u32) << 6 | (coords[2] as u32) << 4 | (coords[1] as u32) << 2 | coords[0] as u32).dilate_fixed::<4>().value();
         (dilated >> 21 | dilated >> 14 | dilated >> 7 | dilated) as u8
@@ -170,6 +152,7 @@ impl MortonEncode<4> for u8 {
 }
 
 impl MortonEncode<2> for u16 {
+    #[inline(always)]
     fn morton_encode(coords: [Self; 2]) -> Self {
         let dilated = ((coords[1] as u32) << 8 | coords[0] as u32).dilate_fixed::<2>().value();
         (dilated >> 15 | dilated) as u16
@@ -177,6 +160,7 @@ impl MortonEncode<2> for u16 {
 }
 
 impl MortonEncode<3> for u16 {
+    #[inline(always)]
     fn morton_encode(coords: [Self; 3]) -> Self {
         // These coords are intentionally not packed contiguously so that we can avoid a bitmask when recombining
         let dilated = ((coords[2] as u64) << 12 | (coords[1] as u64) << 6 | coords[0] as u64).dilate_fixed::<3>().value();
@@ -185,6 +169,7 @@ impl MortonEncode<3> for u16 {
 }
 
 impl MortonEncode<4> for u16 {
+    #[inline(always)]
     fn morton_encode(coords: [Self; 4]) -> Self {
         let dilated = ((coords[3] as u64) << 12 | (coords[2] as u64) << 8 | (coords[1] as u64) << 4 | coords[0] as u64).dilate_fixed::<4>().value();
         (dilated >> 45 | dilated >> 30 | dilated >> 15 | dilated) as u16
@@ -192,6 +177,7 @@ impl MortonEncode<4> for u16 {
 }
 
 impl MortonEncode<2> for u32 {
+    #[inline(always)]
     fn morton_encode(coords: [Self; 2]) -> Self {
         let dilated = ((coords[1] as u64) << 16 | coords[0] as u64).dilate_fixed::<2>().value();
         (dilated >> 32 << 1 | dilated) as u32
@@ -199,6 +185,7 @@ impl MortonEncode<2> for u32 {
 }
 
 impl MortonEncode<3> for u32 {
+    #[inline(always)]
     fn morton_encode(coords: [Self; 3]) -> Self {
         // These coords are intentionally not packed contiguously so that we can avoid a bitmask when recombining
         let dilated_xy = ((coords[1] as u64) << 11 | coords[0] as u64).dilate_fixed::<3>().value();
@@ -212,6 +199,7 @@ impl MortonEncode<3> for u32 {
 }
 
 impl MortonEncode<4> for u32 {
+    #[inline(always)]
     fn morton_encode(coords: [Self; 4]) -> Self {
         let dilated_xy = ((coords[1] as u64) << 8 | coords[0] as u64).dilate_fixed::<4>().value();
         let result_xy = (dilated_xy >> 31 | dilated_xy) as u32;
@@ -224,43 +212,52 @@ impl MortonEncode<4> for u32 {
 }
 
 impl MortonEncode<2> for u64 {
+    #[inline(always)]
     fn morton_encode(coords: [Self; 2]) -> Self {
         0
     }
 }
 
 impl MortonEncode<3> for u64 {
+    #[inline(always)]
     fn morton_encode(coords: [Self; 3]) -> Self {
         0
     }
 }
 
 impl MortonEncode<4> for u64 {
+    #[inline(always)]
     fn morton_encode(coords: [Self; 4]) -> Self {
         0
     }
 }
 
 impl MortonEncode<2> for u128 {
+    #[inline(always)]
     fn morton_encode(coords: [Self; 2]) -> Self {
         0
     }
 }
 
 impl MortonEncode<3> for u128 {
+    #[inline(always)]
     fn morton_encode(coords: [Self; 3]) -> Self {
         0
     }
 }
 
 impl MortonEncode<4> for u128 {
+    #[inline(always)]
     fn morton_encode(coords: [Self; 4]) -> Self {
         0
     }
 }
 
 impl MortonEncode<2> for usize {
+    #[inline(always)]
     fn morton_encode(coords: [Self; 2]) -> Self {
+        #[cfg(target_pointer_width = "8")]
+        return u8::morton_encode(coords.map(|c| c as u8)) as Self;
         #[cfg(target_pointer_width = "16")]
         return u16::morton_encode(coords.map(|c| c as u16)) as Self;
         #[cfg(target_pointer_width = "32")]
@@ -271,7 +268,10 @@ impl MortonEncode<2> for usize {
 }
 
 impl MortonEncode<3> for usize {
+    #[inline(always)]
     fn morton_encode(coords: [Self; 3]) -> Self {
+        #[cfg(target_pointer_width = "8")]
+        return u8::morton_encode(coords.map(|c| c as u8)) as Self;
         #[cfg(target_pointer_width = "16")]
         return u16::morton_encode(coords.map(|c| c as u16)) as Self;
         #[cfg(target_pointer_width = "32")]
@@ -282,7 +282,10 @@ impl MortonEncode<3> for usize {
 }
 
 impl MortonEncode<4> for usize {
+    #[inline(always)]
     fn morton_encode(coords: [Self; 4]) -> Self {
+        #[cfg(target_pointer_width = "8")]
+        return u8::morton_encode(coords.map(|c| c as u8)) as Self;
         #[cfg(target_pointer_width = "16")]
         return u16::morton_encode(coords.map(|c| c as u16)) as Self;
         #[cfg(target_pointer_width = "32")]
@@ -297,8 +300,9 @@ pub(crate) mod tests {
     extern crate std;
 
     use crate::internal::NumTraits;
-    use crate::{Siblings, Neighbours, SpaceFillingCurve, QueryDirection};
+    use crate::{Neighbours, QueryDirection, SFCMethod, Siblings, SpaceFillingCurve};
     use core::{hash::Hash, panic::RefUnwindSafe};
+    use std::array::from_fn;
     use std::{collections::HashSet, fmt::Debug, marker::PhantomData, panic::catch_unwind};
 
     const MAX_TESTED_INDICES: usize = 100000;
@@ -346,7 +350,7 @@ pub(crate) mod tests {
                     coords[i] = SFC::COORD_MAX.add(NumTraits::one());
                     // We are testing each component of coords here, so can't easily use should_panic
                     // We'll emulate it at a basic level instead
-                    let result = catch_unwind(|| SFC::from_coords(coords));
+                    let result = catch_unwind(|| SFC::from_coords(coords, SFCMethod::Auto));
                     if !result.is_err() {
                         panic!("Test did not panic as expected");
                     }
@@ -365,7 +369,7 @@ pub(crate) mod tests {
 
             for i in 0..num_indices {
                 // Transform index to coords
-                let coords = SFC::from_index(NumTraits::from_usize(i)).coords();
+                let coords = SFC::from_index(NumTraits::from_usize(i)).coords(SFCMethod::Auto);
 
                 // Record visits to this coord (should never be hit twice)
                 assert_eq!(coord_visit.contains(&coords), false);
@@ -384,10 +388,10 @@ pub(crate) mod tests {
                 }
 
                 // Transform coords to index (should be the original index)
-                if SFC::from_coords(coords).index().to_usize() != i {
+                if SFC::from_coords(coords, SFCMethod::Auto).index().to_usize() != i {
                     println!("OH :(");
                 }
-                assert_eq!(SFC::from_coords(coords).index().to_usize(), i);
+                assert_eq!(SFC::from_coords(coords, SFCMethod::Auto).index().to_usize(), i);
             }
         }
 
@@ -400,7 +404,7 @@ pub(crate) mod tests {
             for i in 0..num_indices {
                 // It's a shame that we have to rely on other SFC methods to test this trait... not sure of a better solution yet
                 let sfc = SFC::from_index(NumTraits::from_usize(i));
-                let coords = sfc.coords();
+                let coords = sfc.coords(SFCMethod::Auto);
                 for axis in 0..D {
                     let mut expected_coords = coords;
                     expected_coords[axis] =
@@ -409,7 +413,7 @@ pub(crate) mod tests {
                         } else {
                             coords[axis].sub(NumTraits::one())
                         };
-                    assert_eq!(sfc.sibling_on_axis_toggle(axis).coords(), expected_coords);
+                    assert_eq!(sfc.sibling_on_axis_toggle(axis).coords(SFCMethod::Auto), expected_coords);
                 }
             }
         }
@@ -423,7 +427,7 @@ pub(crate) mod tests {
             for i in 0..num_indices {
                 // It's a shame that we have to rely on other SFC methods to test this trait... not sure of a better solution yet
                 let sfc = SFC::from_index(NumTraits::from_usize(i));
-                let coords = sfc.coords();
+                let coords = sfc.coords(SFCMethod::Auto);
                 for axis in 0..D {
                     let mut expected_coords = coords;
                     expected_coords[axis] =
@@ -432,7 +436,7 @@ pub(crate) mod tests {
                         } else {
                             coords[axis]
                         };
-                    assert_eq!(sfc.sibling_on_axis(axis, QueryDirection::Positive).coords(), expected_coords);
+                    assert_eq!(sfc.sibling_on_axis(axis, QueryDirection::Positive).coords(SFCMethod::Auto), expected_coords);
 
                     expected_coords[axis] =
                         if coords[axis].bit_and(NumTraits::one()) == NumTraits::one() {
@@ -440,7 +444,7 @@ pub(crate) mod tests {
                         } else {
                             coords[axis]
                         };
-                    assert_eq!(sfc.sibling_on_axis(axis, QueryDirection::Negative).coords(), expected_coords);
+                    assert_eq!(sfc.sibling_on_axis(axis, QueryDirection::Negative).coords(SFCMethod::Auto), expected_coords);
                 }
             }
         }
@@ -455,10 +459,10 @@ pub(crate) mod tests {
             for i in 0..num_indices {
                 // It's a shame that we have to rely on other SFC methods to test this trait... not sure of a better solution yet
                 let sfc = SFC::from_index(NumTraits::from_usize(i));
-                let coords = sfc.coords();
+                let coords = sfc.coords(SFCMethod::Auto);
                 for n in 0..num_siblings {
-                    let expected_coords = array_from_fn::<_, _, D>(|i| coords[i].bit_and(SFC::Coord::one().bit_not()).bit_or(NumTraits::from_usize((n >> i) & 0x1)));
-                    assert_eq!(sfc.sibling_from_bits(NumTraits::from_usize(n)).coords(), expected_coords)
+                    let expected_coords = from_fn::<_, D, _>(|i| coords[i].bit_and(SFC::Coord::one().bit_not()).bit_or(NumTraits::from_usize((n >> i) & 0x1)));
+                    assert_eq!(sfc.sibling_from_bits(NumTraits::from_usize(n)).coords(SFCMethod::Auto), expected_coords)
                 }
             }
         }
@@ -473,11 +477,11 @@ pub(crate) mod tests {
             for i in 0..num_indices {
                 // It's a shame that we have to rely on other SFC methods to test this trait... not sure of a better solution yet
                 let sfc = SFC::from_index(NumTraits::from_usize(i));
-                let coords = sfc.coords();
+                let coords = sfc.coords(SFCMethod::Auto);
                 for n in 0..num_siblings {
-                    let axes = array_from_fn::<_, _, D>(|i| if n >> i & 0x1 != 0 { QueryDirection::Positive } else { QueryDirection::Negative });
-                    let expected_coords = array_from_fn::<_, _, D>(|i| coords[i].bit_and(SFC::Coord::one().bit_not()).bit_or(NumTraits::from_usize((n >> i) & 0x1)));
-                    assert_eq!(sfc.sibling_on_axes(axes).coords(), expected_coords)
+                    let axes = from_fn::<_, D, _>(|i| if n >> i & 0x1 != 0 { QueryDirection::Positive } else { QueryDirection::Negative });
+                    let expected_coords = from_fn::<_, D, _>(|i| coords[i].bit_and(SFC::Coord::one().bit_not()).bit_or(NumTraits::from_usize((n >> i) & 0x1)));
+                    assert_eq!(sfc.sibling_on_axes(axes).coords(SFCMethod::Auto), expected_coords)
                 }
             }
         }
@@ -491,12 +495,12 @@ pub(crate) mod tests {
             for i in 0..num_indices {
                 // It's a shame that we have to rely on other SFC methods to test this trait... not sure of a better solution yet
                 let sfc = SFC::from_index(NumTraits::from_usize(i));
-                let coords = sfc.coords();
+                let coords = sfc.coords(SFCMethod::Auto);
                 for axis in 0..D {
                     let expected = if coords[axis] != SFC::COORD_MAX {
                         let mut nbr_coords = coords;
                         nbr_coords[axis] = coords[axis].add(NumTraits::one());
-                        Some(SFC::from_coords(nbr_coords))
+                        Some(SFC::from_coords(nbr_coords, SFCMethod::Auto))
                     } else {
                         None
                     };
@@ -505,7 +509,7 @@ pub(crate) mod tests {
                     let expected = if coords[axis] != NumTraits::zero() {
                         let mut nbr_coords = coords;
                         nbr_coords[axis] = coords[axis].sub(NumTraits::one());
-                        Some(SFC::from_coords(nbr_coords))
+                        Some(SFC::from_coords(nbr_coords, SFCMethod::Auto))
                     } else {
                         None
                     };
@@ -523,7 +527,7 @@ pub(crate) mod tests {
             for i in 0..num_indices {
                 // It's a shame that we have to rely on other SFC methods to test this trait... not sure of a better solution yet
                 let sfc = SFC::from_index(NumTraits::from_usize(i));
-                let coords = sfc.coords();
+                let coords = sfc.coords(SFCMethod::Auto);
                 for axis in 0..D {
                     let mut expected_coords = coords;
                     expected_coords[axis] =
@@ -532,7 +536,7 @@ pub(crate) mod tests {
                         } else {
                             NumTraits::zero()
                         };
-                    assert_eq!(sfc.neighbour_on_axis_wrapping(axis, QueryDirection::Positive).coords(), expected_coords);
+                    assert_eq!(sfc.neighbour_on_axis_wrapping(axis, QueryDirection::Positive).coords(SFCMethod::Auto), expected_coords);
 
                     expected_coords[axis] =
                         if coords[axis] != NumTraits::zero() {
@@ -540,7 +544,7 @@ pub(crate) mod tests {
                         } else {
                             SFC::COORD_MAX
                         };
-                    assert_eq!(sfc.neighbour_on_axis_wrapping(axis, QueryDirection::Negative).coords(), expected_coords);
+                    assert_eq!(sfc.neighbour_on_axis_wrapping(axis, QueryDirection::Negative).coords(SFCMethod::Auto), expected_coords);
                 }
             }
         }
@@ -554,7 +558,7 @@ pub(crate) mod tests {
             for i in 0..num_indices {
                 // It's a shame that we have to rely on other SFC methods to test this trait... not sure of a better solution yet
                 let sfc = SFC::from_index(NumTraits::from_usize(i));
-                let coords = sfc.coords();
+                let coords = sfc.coords(SFCMethod::Auto);
 
                 let num_corners = (1usize << D).min(MAX_PERMUTATIONS);
                 for corner in 0..num_corners {
@@ -577,7 +581,7 @@ pub(crate) mod tests {
                             }
                         }
                     }
-                    let expected = valid.then(|| SFC::from_coords(expected_coords));
+                    let expected = valid.then(|| SFC::from_coords(expected_coords, SFCMethod::Auto));
                     assert_eq!(sfc.neighbour_on_corner(test_axes), expected);
                 }
             }
@@ -592,7 +596,7 @@ pub(crate) mod tests {
             for i in 0..num_indices {
                 // It's a shame that we have to rely on other SFC methods to test this trait... not sure of a better solution yet
                 let sfc = SFC::from_index(NumTraits::from_usize(i));
-                let coords = sfc.coords();
+                let coords = sfc.coords(SFCMethod::Auto);
 
                 let num_corners = (1usize << D).min(MAX_PERMUTATIONS);
                 for corner in 0..num_corners {
@@ -614,7 +618,7 @@ pub(crate) mod tests {
                             }
                         }
                     }
-                    let expected = SFC::from_coords(expected_coords);
+                    let expected = SFC::from_coords(expected_coords, SFCMethod::Auto);
                     assert_eq!(sfc.neighbour_on_corner_wrapping(test_axes), expected);
                 }
             }
@@ -723,6 +727,4 @@ pub(crate) mod tests {
         )+}
     }
     pub(crate) use test_curve_neighbours;
-
-    use super::array_from_fn;
 }
