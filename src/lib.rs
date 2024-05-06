@@ -1,4 +1,4 @@
-//#![no_std]
+#![no_std]
 #![warn(missing_docs)]
 #![warn(rustdoc::missing_doc_code_examples)]
 #![deny(rustdoc::invalid_rust_codeblocks)]
@@ -117,12 +117,6 @@ impl QueryDirection {
     }
 }
 
-pub enum SFCMethod {
-    Auto,
-    Naive,
-    Explicit,
-}
-
 /// Provides conversion to and from coordinates
 // I'd really love to get rid of the generic parameter here but I think it's waiting on:
 // https://github.com/rust-lang/rust/issues/76560
@@ -187,7 +181,7 @@ pub trait SpaceFillingCurve<const D: usize>: Sized + Ord + Copy + Default + Debu
     /// assert_eq!(location.index(), 0b110101);
     /// assert_eq!(location.coords(), [1, 2, 3]);
     /// ```
-    fn from_coords(coords: [Self::Coord; D], sfc_method: SFCMethod) -> Self;
+    fn from_coords(coords: [Self::Coord; D]) -> Self;
 
     /// Decode curve index into coordinates
     ///
@@ -203,7 +197,7 @@ pub trait SpaceFillingCurve<const D: usize>: Sized + Ord + Copy + Default + Debu
     /// assert_eq!(location.index(), 0b110101);
     /// assert_eq!(location.coords(), [1, 2, 3]);
     /// ```
-    fn coords(&self, sfc_method: SFCMethod) -> [Self::Coord; D];
+    fn coords(&self) -> [Self::Coord; D];
 
     /// Access curve location index
     ///

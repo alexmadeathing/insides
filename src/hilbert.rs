@@ -646,8 +646,8 @@ where
     }
 
     #[inline(always)]
-    fn from_coords(coords: [Self::Coord; D], sfc_method: crate::SFCMethod) -> Self {
-        let morton_index = Morton::<DM, D>::from_coords(coords, sfc_method).index();
+    fn from_coords(coords: [Self::Coord; D]) -> Self {
+        let morton_index = Morton::<DM, D>::from_coords(coords).index();
         if morton_index.fits_in_usize() { // Is this really needed?
             Self(Self::Index::from_usize(morton_to_hilbert::<usize, D>(morton_index.to_usize())))
         } else {
@@ -656,11 +656,11 @@ where
     }
 
     #[inline(always)]
-    fn coords(&self, sfc_method: crate::SFCMethod) -> [Self::Coord; D] {
+    fn coords(&self) -> [Self::Coord; D] {
         if self.0.fits_in_usize() {
-            Morton::<DM, D>::from_index(Self::Index::from_usize(hilbert_to_morton::<usize, D>(self.0.to_usize()))).coords(sfc_method)
+            Morton::<DM, D>::from_index(Self::Index::from_usize(hilbert_to_morton::<usize, D>(self.0.to_usize()))).coords()
         } else {
-            Morton::<DM, D>::from_index(morton_to_hilbert::<Self::Index, D>(self.0)).coords(sfc_method)
+            Morton::<DM, D>::from_index(morton_to_hilbert::<Self::Index, D>(self.0)).coords()
         }
     }
 

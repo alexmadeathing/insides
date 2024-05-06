@@ -4,7 +4,7 @@ use dilate::*;
 
 use super::{CurveCoord, CurveIndex, Neighbours, QueryDirection, Siblings, SpaceFillingCurve};
 
-use crate::internal::{NumTraits, MortonEncode};
+use crate::internal::{MortonEncode, NumTraits};
 
 /// A Morton encoded space filling curve implementation
 ///
@@ -69,41 +69,38 @@ where
     }
 
     #[inline(always)]
-    fn from_coords(coords: [Self::Coord; D], sfc_method: crate::SFCMethod) -> Self {
+    fn from_coords(coords: [Self::Coord; D]) -> Self {
         debug_assert!(
             *coords.iter().max().unwrap() <= Self::COORD_MAX,
             "Parameter 'coords' contains a value which exceeds maximum"
         );
 
-        match sfc_method {
-            crate::SFCMethod::Auto | crate::SFCMethod::Naive => {
-                Self(
-                    coords
-                        .into_iter()
-                        .enumerate()
-                        .fold(Self::Index::zero(), |v, (i, c)| {
-                            v.bit_or(DM::dilate(c).value().shl(i))
-                        }),
-                )
-            },
-            crate::SFCMethod::Explicit => {
-                if D <= 4 {
-                    let coords = coords.map(|c| DM::to_dilated(c));
-                    Self(match D {
-                        2 => <Self::Index as MortonEncode<2>>::morton_encode([coords[0], coords[1]]),
-                        3 => <Self::Index as MortonEncode<3>>::morton_encode([coords[0], coords[1], coords[2]]),
-                        4 => <Self::Index as MortonEncode<4>>::morton_encode([coords[0], coords[1], coords[2], coords[3]]),
-                        _ => unreachable!(),
-                    })
-                } else {
-                    unimplemented!()
-                }
-            },
+        if D <= 4 {
+            let coords = coords.map(|c| DM::to_dilated(c));
+            Self(match D {
+                2 => <Self::Index as MortonEncode<2>>::morton_encode([coords[0], coords[1]]),
+                3 => <Self::Index as MortonEncode<3>>::morton_encode([
+                    coords[0], coords[1], coords[2],
+                ]),
+                4 => <Self::Index as MortonEncode<4>>::morton_encode([
+                    coords[0], coords[1], coords[2], coords[3],
+                ]),
+                _ => unreachable!(),
+            })
+        } else {
+            Self(
+                coords
+                    .into_iter()
+                    .enumerate()
+                    .fold(Self::Index::zero(), |v, (i, c)| {
+                        v.bit_or(DM::dilate(c).value().shl(i))
+                    }),
+            )
         }
     }
 
     #[inline(always)]
-    fn coords(&self, sfc_method: crate::SFCMethod) -> [Self::Coord; D] {
+    fn coords(&self) -> [Self::Coord; D] {
         from_fn::<_, D, _>(|i| {
             DilatedInt::<DM>::new(self.0.shr(i).bit_and(DM::DILATED_MAX)).undilate()
         })
