@@ -1,4 +1,59 @@
-use dilate::{DilateFixed, Fixed, DilationMethod};
+use core::array::from_fn;
+use dilate::DilatableType;
+use dilate::DilatedInt;
+use dilate::Fixed;
+use dilate::DilateFixed;
+
+pub(crate) trait Sealed: DilatableType {
+    // Main entrypoints
+    fn morton_encode<const D: usize>(coords: [Self; D]) -> Self;
+    fn morton_decode<const D: usize>(self, dilated_max: Self) -> [Self; D];
+
+    // Utility methods
+    fn _morton_encode_d2(coords: [Self; 2]) -> Self;
+    fn _morton_encode_d3(coords: [Self; 3]) -> Self;
+    fn _morton_encode_d4(coords: [Self; 4]) -> Self;
+    fn _morton_decode_d2(self, dilated_max: Self) -> [Self; 2];
+    fn _morton_decode_d3(self, dilated_max: Self) -> [Self; 3];
+    fn _morton_decode_d4(self, dilated_max: Self) -> [Self; 4];
+}
+
+macro_rules! impl_sealed_common {
+    () => {
+        #[inline(always)]
+        fn morton_encode<const D: usize>(coords: [Self; D]) -> Self {
+            match D {
+//                2 => self._morton_encode_d2([coords[0], coords[1]]),
+//                3 => self._morton_encode_d3([coords[0], coords[1], coords[2]]),
+//                4 => self._morton_encode_d4([coords[0], coords[1], coords[2], coords[3]]),
+                _ => {
+                    // TODO test performance against while loop
+                    coords.into_iter().enumerate().fold(0, |v, (i, c)| {
+                        v | c.dilate_fixed::<D>().value() << i
+                    })
+                },
+            }
+        }
+
+        #[inline(always)]
+        fn morton_decode<const D: usize>(self, dilated_max: Self) -> [Self; D] {
+            match D {
+//                2 => self._morton_decode_d2(),
+//                3 => self._morton_decode_d3(),
+//                4 => self._morton_decode_d4(),
+                _ => {
+                    from_fn::<_, D, _>(|i| {
+                        DilatedInt::<Fixed<Self, D>>::new(self >> i & dilated_max).undilate()
+                    })
+                },
+            }
+        }
+    };
+}
+
+impl Sealed for u8 {
+    impl_sealed_common!();
+}
 
 pub trait NumTraits: Copy + Ord {
     // Add methods as needed
@@ -300,9 +355,10 @@ pub(crate) mod tests {
     extern crate std;
 
     use crate::internal::NumTraits;
-    use crate::{Neighbours, QueryDirection, SFCMethod, Siblings, SpaceFillingCurve};
+    use crate::{Neighbours, QueryDirection, Siblings, SpaceFillingCurve};
     use core::{hash::Hash, panic::RefUnwindSafe};
     use std::array::from_fn;
+    use std::println;
     use std::{collections::HashSet, fmt::Debug, marker::PhantomData, panic::catch_unwind};
 
     const MAX_TESTED_INDICES: usize = 100000;
@@ -350,7 +406,7 @@ pub(crate) mod tests {
                     coords[i] = SFC::COORD_MAX.add(NumTraits::one());
                     // We are testing each component of coords here, so can't easily use should_panic
                     // We'll emulate it at a basic level instead
-                    let result = catch_unwind(|| SFC::from_coords(coords, SFCMethod::Auto));
+                    let result = catch_unwind(|| SFC::from_coords(coords));
                     if !result.is_err() {
                         panic!("Test did not panic as expected");
                     }
@@ -369,7 +425,7 @@ pub(crate) mod tests {
 
             for i in 0..num_indices {
                 // Transform index to coords
-                let coords = SFC::from_index(NumTraits::from_usize(i)).coords(SFCMethod::Auto);
+                let coords = SFC::from_index(NumTraits::from_usize(i)).coords();
 
                 // Record visits to this coord (should never be hit twice)
                 assert_eq!(coord_visit.contains(&coords), false);
@@ -388,10 +444,10 @@ pub(crate) mod tests {
                 }
 
                 // Transform coords to index (should be the original index)
-                if SFC::from_coords(coords, SFCMethod::Auto).index().to_usize() != i {
+                if SFC::from_coords(coords).index().to_usize() != i {
                     println!("OH :(");
                 }
-                assert_eq!(SFC::from_coords(coords, SFCMethod::Auto).index().to_usize(), i);
+                assert_eq!(SFC::from_coords(coords).index().to_usize(), i);
             }
         }
 
@@ -404,7 +460,7 @@ pub(crate) mod tests {
             for i in 0..num_indices {
                 // It's a shame that we have to rely on other SFC methods to test this trait... not sure of a better solution yet
                 let sfc = SFC::from_index(NumTraits::from_usize(i));
-                let coords = sfc.coords(SFCMethod::Auto);
+                let coords = sfc.coords();
                 for axis in 0..D {
                     let mut expected_coords = coords;
                     expected_coords[axis] =
@@ -413,7 +469,7 @@ pub(crate) mod tests {
                         } else {
                             coords[axis].sub(NumTraits::one())
                         };
-                    assert_eq!(sfc.sibling_on_axis_toggle(axis).coords(SFCMethod::Auto), expected_coords);
+                    assert_eq!(sfc.sibling_on_axis_toggle(axis).coords(), expected_coords);
                 }
             }
         }
@@ -427,7 +483,7 @@ pub(crate) mod tests {
             for i in 0..num_indices {
                 // It's a shame that we have to rely on other SFC methods to test this trait... not sure of a better solution yet
                 let sfc = SFC::from_index(NumTraits::from_usize(i));
-                let coords = sfc.coords(SFCMethod::Auto);
+                let coords = sfc.coords();
                 for axis in 0..D {
                     let mut expected_coords = coords;
                     expected_coords[axis] =
@@ -436,7 +492,7 @@ pub(crate) mod tests {
                         } else {
                             coords[axis]
                         };
-                    assert_eq!(sfc.sibling_on_axis(axis, QueryDirection::Positive).coords(SFCMethod::Auto), expected_coords);
+                    assert_eq!(sfc.sibling_on_axis(axis, QueryDirection::Positive).coords(), expected_coords);
 
                     expected_coords[axis] =
                         if coords[axis].bit_and(NumTraits::one()) == NumTraits::one() {
@@ -444,7 +500,7 @@ pub(crate) mod tests {
                         } else {
                             coords[axis]
                         };
-                    assert_eq!(sfc.sibling_on_axis(axis, QueryDirection::Negative).coords(SFCMethod::Auto), expected_coords);
+                    assert_eq!(sfc.sibling_on_axis(axis, QueryDirection::Negative).coords(), expected_coords);
                 }
             }
         }
@@ -459,10 +515,10 @@ pub(crate) mod tests {
             for i in 0..num_indices {
                 // It's a shame that we have to rely on other SFC methods to test this trait... not sure of a better solution yet
                 let sfc = SFC::from_index(NumTraits::from_usize(i));
-                let coords = sfc.coords(SFCMethod::Auto);
+                let coords = sfc.coords();
                 for n in 0..num_siblings {
                     let expected_coords = from_fn::<_, D, _>(|i| coords[i].bit_and(SFC::Coord::one().bit_not()).bit_or(NumTraits::from_usize((n >> i) & 0x1)));
-                    assert_eq!(sfc.sibling_from_bits(NumTraits::from_usize(n)).coords(SFCMethod::Auto), expected_coords)
+                    assert_eq!(sfc.sibling_from_bits(NumTraits::from_usize(n)).coords(), expected_coords)
                 }
             }
         }
@@ -477,11 +533,11 @@ pub(crate) mod tests {
             for i in 0..num_indices {
                 // It's a shame that we have to rely on other SFC methods to test this trait... not sure of a better solution yet
                 let sfc = SFC::from_index(NumTraits::from_usize(i));
-                let coords = sfc.coords(SFCMethod::Auto);
+                let coords = sfc.coords();
                 for n in 0..num_siblings {
                     let axes = from_fn::<_, D, _>(|i| if n >> i & 0x1 != 0 { QueryDirection::Positive } else { QueryDirection::Negative });
                     let expected_coords = from_fn::<_, D, _>(|i| coords[i].bit_and(SFC::Coord::one().bit_not()).bit_or(NumTraits::from_usize((n >> i) & 0x1)));
-                    assert_eq!(sfc.sibling_on_axes(axes).coords(SFCMethod::Auto), expected_coords)
+                    assert_eq!(sfc.sibling_on_axes(axes).coords(), expected_coords)
                 }
             }
         }
@@ -495,12 +551,12 @@ pub(crate) mod tests {
             for i in 0..num_indices {
                 // It's a shame that we have to rely on other SFC methods to test this trait... not sure of a better solution yet
                 let sfc = SFC::from_index(NumTraits::from_usize(i));
-                let coords = sfc.coords(SFCMethod::Auto);
+                let coords = sfc.coords();
                 for axis in 0..D {
                     let expected = if coords[axis] != SFC::COORD_MAX {
                         let mut nbr_coords = coords;
                         nbr_coords[axis] = coords[axis].add(NumTraits::one());
-                        Some(SFC::from_coords(nbr_coords, SFCMethod::Auto))
+                        Some(SFC::from_coords(nbr_coords))
                     } else {
                         None
                     };
@@ -509,7 +565,7 @@ pub(crate) mod tests {
                     let expected = if coords[axis] != NumTraits::zero() {
                         let mut nbr_coords = coords;
                         nbr_coords[axis] = coords[axis].sub(NumTraits::one());
-                        Some(SFC::from_coords(nbr_coords, SFCMethod::Auto))
+                        Some(SFC::from_coords(nbr_coords))
                     } else {
                         None
                     };
@@ -527,7 +583,7 @@ pub(crate) mod tests {
             for i in 0..num_indices {
                 // It's a shame that we have to rely on other SFC methods to test this trait... not sure of a better solution yet
                 let sfc = SFC::from_index(NumTraits::from_usize(i));
-                let coords = sfc.coords(SFCMethod::Auto);
+                let coords = sfc.coords();
                 for axis in 0..D {
                     let mut expected_coords = coords;
                     expected_coords[axis] =
@@ -536,7 +592,7 @@ pub(crate) mod tests {
                         } else {
                             NumTraits::zero()
                         };
-                    assert_eq!(sfc.neighbour_on_axis_wrapping(axis, QueryDirection::Positive).coords(SFCMethod::Auto), expected_coords);
+                    assert_eq!(sfc.neighbour_on_axis_wrapping(axis, QueryDirection::Positive).coords(), expected_coords);
 
                     expected_coords[axis] =
                         if coords[axis] != NumTraits::zero() {
@@ -544,7 +600,7 @@ pub(crate) mod tests {
                         } else {
                             SFC::COORD_MAX
                         };
-                    assert_eq!(sfc.neighbour_on_axis_wrapping(axis, QueryDirection::Negative).coords(SFCMethod::Auto), expected_coords);
+                    assert_eq!(sfc.neighbour_on_axis_wrapping(axis, QueryDirection::Negative).coords(), expected_coords);
                 }
             }
         }
@@ -558,7 +614,7 @@ pub(crate) mod tests {
             for i in 0..num_indices {
                 // It's a shame that we have to rely on other SFC methods to test this trait... not sure of a better solution yet
                 let sfc = SFC::from_index(NumTraits::from_usize(i));
-                let coords = sfc.coords(SFCMethod::Auto);
+                let coords = sfc.coords();
 
                 let num_corners = (1usize << D).min(MAX_PERMUTATIONS);
                 for corner in 0..num_corners {
@@ -581,7 +637,7 @@ pub(crate) mod tests {
                             }
                         }
                     }
-                    let expected = valid.then(|| SFC::from_coords(expected_coords, SFCMethod::Auto));
+                    let expected = valid.then(|| SFC::from_coords(expected_coords));
                     assert_eq!(sfc.neighbour_on_corner(test_axes), expected);
                 }
             }
@@ -596,7 +652,7 @@ pub(crate) mod tests {
             for i in 0..num_indices {
                 // It's a shame that we have to rely on other SFC methods to test this trait... not sure of a better solution yet
                 let sfc = SFC::from_index(NumTraits::from_usize(i));
-                let coords = sfc.coords(SFCMethod::Auto);
+                let coords = sfc.coords();
 
                 let num_corners = (1usize << D).min(MAX_PERMUTATIONS);
                 for corner in 0..num_corners {
@@ -618,7 +674,7 @@ pub(crate) mod tests {
                             }
                         }
                     }
-                    let expected = SFC::from_coords(expected_coords, SFCMethod::Auto);
+                    let expected = SFC::from_coords(expected_coords);
                     assert_eq!(sfc.neighbour_on_corner_wrapping(test_axes), expected);
                 }
             }

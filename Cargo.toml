@@ -25,8 +25,8 @@ lut_large_d3 = []
 lut_large_d4 = []
 
 [dependencies]
-dilate = "0.6.2"
-#dilate = { path = "../dilate" }
+#dilate = "0.6.3"
+dilate = { path = "../dilate" }
 
 [dev-dependencies]
 lazy_static = "1.4.0" # For test data

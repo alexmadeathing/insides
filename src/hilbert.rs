@@ -1,3 +1,6 @@
+use core::hash::Hash;
+use core::fmt::Debug;
+
 use dilate::*;
 
 use super::{CurveCoord, CurveIndex, SpaceFillingCurve};
@@ -613,13 +616,9 @@ fn hilbert_to_morton<T: NumTraits, const D: usize>(hilbert_index: T) -> T {
 /// 
 // Until we have complex generic constants, we have to pass D in here (needed by coords)
 // Waiting on: https://github.com/rust-lang/rust/issues/76560
-#[derive(Clone, Copy, Default, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Hilbert<DM, const D: usize>(pub(crate) DM::Dilated)
 where
-    // When https://github.com/rust-lang/rust/issues/52662 is available, we can clean this up
-    DM: DilationMethod,
-    DM::Undilated: CurveCoord,
-    DM::Dilated: CurveIndex;
+    DM: DilationMethod;
     
 impl<DM, const D: usize> SpaceFillingCurve<D> for Hilbert<DM, D>
 where
@@ -670,6 +669,81 @@ where
     }
 }
 
+impl<DM, const D: usize> Default for Hilbert<DM, D>
+where
+    DM: DilationMethod,
+{
+    fn default() -> Self {
+        Self(Default::default())
+    }
+}
+
+impl<DM, const D: usize> Copy for Hilbert<DM, D>
+where
+    DM: DilationMethod,
+{
+}
+
+impl<DM, const D: usize> Clone for Hilbert<DM, D>
+where
+    DM: DilationMethod,
+{
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
+
+impl<DM, const D: usize> Eq for Hilbert<DM, D>
+where
+    DM: DilationMethod,
+{
+}
+
+impl<DM, const D: usize> PartialEq for Hilbert<DM, D>
+where
+    DM: DilationMethod,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl<DM, const D: usize> Ord for Hilbert<DM, D>
+where
+    DM: DilationMethod,
+{
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+        self.0.cmp(&other.0)
+    }
+}
+
+impl<DM, const D: usize> PartialOrd for Hilbert<DM, D>
+where
+    DM: DilationMethod,
+{
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+        self.0.partial_cmp(&other.0)
+    }
+}
+
+impl<DM, const D: usize> Hash for Hilbert<DM, D>
+where
+    DM: DilationMethod,
+{
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+        self.0.hash(state);
+    }
+}
+
+impl<DM, const D: usize> Debug for Hilbert<DM, D>
+where
+    DM: DilationMethod,
+{
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_tuple("Hilbert").field(&self.0).finish()
+    }
+}
+
 /// A Hilbert encoded space filling curve implementation using the Expand dilation method
 // Not available until: https://github.com/rust-lang/rust/issues/112792
 //pub type HilbertExpand<T, const D: usize> = Hilbert<Expand<T, D>, D> where T: CurveIndex;
@@ -682,7 +756,7 @@ where
 mod tests {
     extern crate std;
 
-    use std::{fs::File, io::Write, collections::HashMap};
+    use std::{collections::HashMap, format, fs::File, io::Write, print, println, vec::Vec};
 
     use super::*;
 

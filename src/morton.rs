@@ -1,3 +1,5 @@
+use core::hash::Hash;
+use core::fmt::Debug;
 use core::array::from_fn;
 
 use dilate::*;
@@ -36,13 +38,9 @@ use crate::internal::{MortonEncode, NumTraits};
 /// ```
 // Until we have complex generic constants, we have to pass D in here (needed by coords)
 // Waiting on: https://github.com/rust-lang/rust/issues/76560
-#[derive(Clone, Copy, Default, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Morton<DM, const D: usize>(pub(crate) DM::Dilated)
 where
-    // When https://github.com/rust-lang/rust/issues/52662 is available, we can clean this up
-    DM: DilationMethod,
-    DM::Undilated: CurveCoord,
-    DM::Dilated: CurveIndex;
+    DM: DilationMethod;
 
 impl<DM, const D: usize> SpaceFillingCurve<D> for Morton<DM, D>
 where
@@ -231,6 +229,81 @@ where
             index = index.bit_or(coord.value().shl(axis));
         }
         Self(index)
+    }
+} 
+
+impl<DM, const D: usize> Default for Morton<DM, D>
+where
+    DM: DilationMethod,
+{
+    fn default() -> Self {
+        Self(Default::default())
+    }
+}
+
+impl<DM, const D: usize> Copy for Morton<DM, D>
+where
+    DM: DilationMethod,
+{
+}
+
+impl<DM, const D: usize> Clone for Morton<DM, D>
+where
+    DM: DilationMethod,
+{
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
+
+impl<DM, const D: usize> Eq for Morton<DM, D>
+where
+    DM: DilationMethod,
+{
+}
+
+impl<DM, const D: usize> PartialEq for Morton<DM, D>
+where
+    DM: DilationMethod,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl<DM, const D: usize> Ord for Morton<DM, D>
+where
+    DM: DilationMethod,
+{
+    fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+        self.0.cmp(&other.0)
+    }
+}
+
+impl<DM, const D: usize> PartialOrd for Morton<DM, D>
+where
+    DM: DilationMethod,
+{
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+        self.0.partial_cmp(&other.0)
+    }
+}
+
+impl<DM, const D: usize> Hash for Morton<DM, D>
+where
+    DM: DilationMethod,
+{
+    fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
+        self.0.hash(state);
+    }
+}
+
+impl<DM, const D: usize> Debug for Morton<DM, D>
+where
+    DM: DilationMethod,
+{
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_tuple("Morton").field(&self.0).finish()
     }
 }
 

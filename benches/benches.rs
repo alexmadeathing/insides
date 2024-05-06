@@ -132,10 +132,10 @@ fn benchmark_morton_2d(c: &mut Criterion) {
         c,
         "insides (morton u16)",
         coord_length,
-        |i| black_box(Morton::<Fixed<u16, 2>, 2>::from_index(black_box(i as u16)).coords(insides::SFCMethod::Auto)),
+        |i| black_box(Morton::<Fixed<u16, 2>, 2>::from_index(black_box(i as u16)).coords()),
         |x, y| {
             black_box(
-                Morton::<Fixed<u16, 2>, 2>::from_coords(black_box([x as u16, y as u16]), insides::SFCMethod::Auto).index(),
+                Morton::<Fixed<u16, 2>, 2>::from_coords(black_box([x as u16, y as u16])).index(),
             )
         },
     );
@@ -144,10 +144,10 @@ fn benchmark_morton_2d(c: &mut Criterion) {
         c,
         "insides (morton u32)",
         coord_length,
-        |i| black_box(Morton::<Fixed<u32, 2>, 2>::from_index(black_box(i as u32)).coords(insides::SFCMethod::Auto)),
+        |i| black_box(Morton::<Fixed<u32, 2>, 2>::from_index(black_box(i as u32)).coords()),
         |x, y| {
             black_box(
-                Morton::<Fixed<u32, 2>, 2>::from_coords(black_box([x as u32, y as u32]), insides::SFCMethod::Auto).index(),
+                Morton::<Fixed<u32, 2>, 2>::from_coords(black_box([x as u32, y as u32])).index(),
             )
         },
     );
@@ -156,10 +156,10 @@ fn benchmark_morton_2d(c: &mut Criterion) {
         c,
         "insides (morton u64)",
         coord_length,
-        |i| black_box(Morton::<Fixed<u64, 2>, 2>::from_index(black_box(i as u64)).coords(insides::SFCMethod::Auto)),
+        |i| black_box(Morton::<Fixed<u64, 2>, 2>::from_index(black_box(i as u64)).coords()),
         |x, y| {
             black_box(
-                Morton::<Fixed<u64, 2>, 2>::from_coords(black_box([x as u64, y as u64]), insides::SFCMethod::Auto).index(),
+                Morton::<Fixed<u64, 2>, 2>::from_coords(black_box([x as u64, y as u64])).index(),
             )
         },
     );
@@ -168,10 +168,10 @@ fn benchmark_morton_2d(c: &mut Criterion) {
         c,
         "insides (morton u128)",
         coord_length,
-        |i| black_box(Morton::<Fixed<u128, 2>, 2>::from_index(black_box(i as u128)).coords(insides::SFCMethod::Auto)),
+        |i| black_box(Morton::<Fixed<u128, 2>, 2>::from_index(black_box(i as u128)).coords()),
         |x, y| {
             black_box(
-                Morton::<Fixed<u128, 2>, 2>::from_coords(black_box([x as u128, y as u128]), insides::SFCMethod::Auto).index(),
+                Morton::<Fixed<u128, 2>, 2>::from_coords(black_box([x as u128, y as u128])).index(),
             )
         },
     );
@@ -194,12 +194,12 @@ fn benchmark_morton_3d(c: &mut Criterion) {
         "insides (morton u16)",
         coord_length,
         |i| {
-            black_box(Morton::<Fixed<u16, 3>, 3>::from_index(black_box(i as u16)).coords(insides::SFCMethod::Auto));
-            black_box(Morton::<Fixed<u16, 3>, 3>::from_index(black_box(i as u16)).coords(insides::SFCMethod::Auto));
+            black_box(Morton::<Fixed<u16, 3>, 3>::from_index(black_box(i as u16)).coords());
+            black_box(Morton::<Fixed<u16, 3>, 3>::from_index(black_box(i as u16)).coords());
         },
         |x, y, z| {
-            black_box(Morton::<Fixed<u16, 3>, 3>::from_coords(black_box([x as u16, y as u16, z as u16]), insides::SFCMethod::Auto).index());
-            black_box(Morton::<Fixed<u16, 3>, 3>::from_coords(black_box([x as u16, y as u16, z as u16]), insides::SFCMethod::Auto).index());
+            black_box(Morton::<Fixed<u16, 3>, 3>::from_coords(black_box([x as u16, y as u16, z as u16])).index());
+            black_box(Morton::<Fixed<u16, 3>, 3>::from_coords(black_box([x as u16, y as u16, z as u16])).index());
         },
     );
 
@@ -208,12 +208,12 @@ fn benchmark_morton_3d(c: &mut Criterion) {
         "insides (morton u32)",
         coord_length,
         |i| {
-            black_box(Morton::<Fixed<u32, 3>, 3>::from_index(black_box(i as u32)).coords(insides::SFCMethod::Auto));
-            black_box(Morton::<Fixed<u32, 3>, 3>::from_index(black_box(i as u32)).coords(insides::SFCMethod::Auto));
+            black_box(Morton::<Fixed<u32, 3>, 3>::from_index(black_box(i as u32)).coords());
+            black_box(Morton::<Fixed<u32, 3>, 3>::from_index(black_box(i as u32)).coords());
         },
         |x, y, z| {
-            black_box(Morton::<Fixed<u32, 3>, 3>::from_coords(black_box([x as u32, y as u32, z as u32]), insides::SFCMethod::Auto).index());
-            black_box(Morton::<Fixed<u32, 3>, 3>::from_coords(black_box([x as u32, y as u32, z as u32]), insides::SFCMethod::Auto).index());
+            black_box(Morton::<Fixed<u32, 3>, 3>::from_coords(black_box([x as u32, y as u32, z as u32])).index());
+            black_box(Morton::<Fixed<u32, 3>, 3>::from_coords(black_box([x as u32, y as u32, z as u32])).index());
         },
     );
 
@@ -222,12 +222,12 @@ fn benchmark_morton_3d(c: &mut Criterion) {
         "insides (morton u64)",
         coord_length,
         |i| {
-            black_box(Morton::<Fixed<u64, 3>, 3>::from_index(black_box(i as u64)).coords(insides::SFCMethod::Auto));
-            black_box(Morton::<Fixed<u64, 3>, 3>::from_index(black_box(i as u64)).coords(insides::SFCMethod::Auto));
+            black_box(Morton::<Fixed<u64, 3>, 3>::from_index(black_box(i as u64)).coords());
+            black_box(Morton::<Fixed<u64, 3>, 3>::from_index(black_box(i as u64)).coords());
         },
         |x, y, z| {
-            black_box(Morton::<Fixed<u64, 3>, 3>::from_coords(black_box([x as u64, y as u64, z as u64]), insides::SFCMethod::Auto).index());
-            black_box(Morton::<Fixed<u64, 3>, 3>::from_coords(black_box([x as u64, y as u64, z as u64]), insides::SFCMethod::Auto).index());
+            black_box(Morton::<Fixed<u64, 3>, 3>::from_coords(black_box([x as u64, y as u64, z as u64])).index());
+            black_box(Morton::<Fixed<u64, 3>, 3>::from_coords(black_box([x as u64, y as u64, z as u64])).index());
         },
     );
 
@@ -236,12 +236,12 @@ fn benchmark_morton_3d(c: &mut Criterion) {
         "insides (morton u128)",
         coord_length,
         |i| {
-            black_box(Morton::<Fixed<u128, 3>, 3>::from_index(black_box(i as u128)).coords(insides::SFCMethod::Auto));
-            black_box(Morton::<Fixed<u128, 3>, 3>::from_index(black_box(i as u128)).coords(insides::SFCMethod::Auto));
+            black_box(Morton::<Fixed<u128, 3>, 3>::from_index(black_box(i as u128)).coords());
+            black_box(Morton::<Fixed<u128, 3>, 3>::from_index(black_box(i as u128)).coords());
         },
         |x, y, z| {
-            black_box(Morton::<Fixed<u128, 3>, 3>::from_coords(black_box([x as u128, y as u128, z as u128]), insides::SFCMethod::Auto).index());
-            black_box(Morton::<Fixed<u128, 3>, 3>::from_coords(black_box([x as u128, y as u128, z as u128]), insides::SFCMethod::Auto).index());
+            black_box(Morton::<Fixed<u128, 3>, 3>::from_coords(black_box([x as u128, y as u128, z as u128])).index());
+            black_box(Morton::<Fixed<u128, 3>, 3>::from_coords(black_box([x as u128, y as u128, z as u128])).index());
         },
     );
 }
@@ -255,12 +255,12 @@ fn benchmark_morton_4d(c: &mut Criterion) {
         "insides (morton u16)",
         coord_length,
         |i| {
-            black_box(Morton::<Fixed<u16, 4>, 4>::from_index(black_box(i as u16)).coords(insides::SFCMethod::Auto));
-            black_box(Morton::<Fixed<u16, 4>, 4>::from_index(black_box(i as u16)).coords(insides::SFCMethod::Auto));
+            black_box(Morton::<Fixed<u16, 4>, 4>::from_index(black_box(i as u16)).coords());
+            black_box(Morton::<Fixed<u16, 4>, 4>::from_index(black_box(i as u16)).coords());
         },
         |x, y, z, w| {
-            black_box(Morton::<Fixed<u16, 4>, 4>::from_coords(black_box([x as u16, y as u16, z as u16, w as u16]), insides::SFCMethod::Auto).index());
-            black_box(Morton::<Fixed<u16, 4>, 4>::from_coords(black_box([x as u16, y as u16, z as u16, w as u16]), insides::SFCMethod::Auto).index());
+            black_box(Morton::<Fixed<u16, 4>, 4>::from_coords(black_box([x as u16, y as u16, z as u16, w as u16])).index());
+            black_box(Morton::<Fixed<u16, 4>, 4>::from_coords(black_box([x as u16, y as u16, z as u16, w as u16])).index());
         },
     );
 
@@ -269,12 +269,12 @@ fn benchmark_morton_4d(c: &mut Criterion) {
         "insides (morton u32)",
         coord_length,
         |i| {
-            black_box(Morton::<Fixed<u32, 4>, 4>::from_index(black_box(i as u32)).coords(insides::SFCMethod::Auto));
-            black_box(Morton::<Fixed<u32, 4>, 4>::from_index(black_box(i as u32)).coords(insides::SFCMethod::Auto));
+            black_box(Morton::<Fixed<u32, 4>, 4>::from_index(black_box(i as u32)).coords());
+            black_box(Morton::<Fixed<u32, 4>, 4>::from_index(black_box(i as u32)).coords());
         },
         |x, y, z, w| {
-            black_box(Morton::<Fixed<u32, 4>, 4>::from_coords(black_box([x as u32, y as u32, z as u32, w as u32]), insides::SFCMethod::Auto).index());
-            black_box(Morton::<Fixed<u32, 4>, 4>::from_coords(black_box([x as u32, y as u32, z as u32, w as u32]), insides::SFCMethod::Auto).index());
+            black_box(Morton::<Fixed<u32, 4>, 4>::from_coords(black_box([x as u32, y as u32, z as u32, w as u32])).index());
+            black_box(Morton::<Fixed<u32, 4>, 4>::from_coords(black_box([x as u32, y as u32, z as u32, w as u32])).index());
         },
     );
 
@@ -283,12 +283,12 @@ fn benchmark_morton_4d(c: &mut Criterion) {
         "insides (morton u64)",
         coord_length,
         |i| {
-            black_box(Morton::<Fixed<u64, 4>, 4>::from_index(black_box(i as u64)).coords(insides::SFCMethod::Auto));
-            black_box(Morton::<Fixed<u64, 4>, 4>::from_index(black_box(i as u64)).coords(insides::SFCMethod::Auto));
+            black_box(Morton::<Fixed<u64, 4>, 4>::from_index(black_box(i as u64)).coords());
+            black_box(Morton::<Fixed<u64, 4>, 4>::from_index(black_box(i as u64)).coords());
         },
         |x, y, z, w| {
-            black_box(Morton::<Fixed<u64, 4>, 4>::from_coords(black_box([x as u64, y as u64, z as u64, w as u64]), insides::SFCMethod::Auto).index());
-            black_box(Morton::<Fixed<u64, 4>, 4>::from_coords(black_box([x as u64, y as u64, z as u64, w as u64]), insides::SFCMethod::Auto).index());
+            black_box(Morton::<Fixed<u64, 4>, 4>::from_coords(black_box([x as u64, y as u64, z as u64, w as u64])).index());
+            black_box(Morton::<Fixed<u64, 4>, 4>::from_coords(black_box([x as u64, y as u64, z as u64, w as u64])).index());
         },
     );
 
@@ -297,12 +297,12 @@ fn benchmark_morton_4d(c: &mut Criterion) {
         "insides (morton u128)",
         coord_length,
         |i| {
-            black_box(Morton::<Fixed<u128, 4>, 4>::from_index(black_box(i as u128)).coords(insides::SFCMethod::Auto));
-            black_box(Morton::<Fixed<u128, 4>, 4>::from_index(black_box(i as u128)).coords(insides::SFCMethod::Auto));
+            black_box(Morton::<Fixed<u128, 4>, 4>::from_index(black_box(i as u128)).coords());
+            black_box(Morton::<Fixed<u128, 4>, 4>::from_index(black_box(i as u128)).coords());
         },
         |x, y, z, w| {
-            black_box(Morton::<Fixed<u128, 4>, 4>::from_coords(black_box([x as u128, y as u128, z as u128, w as u128]), insides::SFCMethod::Auto).index());
-            black_box(Morton::<Fixed<u128, 4>, 4>::from_coords(black_box([x as u128, y as u128, z as u128, w as u128]), insides::SFCMethod::Auto).index());
+            black_box(Morton::<Fixed<u128, 4>, 4>::from_coords(black_box([x as u128, y as u128, z as u128, w as u128])).index());
+            black_box(Morton::<Fixed<u128, 4>, 4>::from_coords(black_box([x as u128, y as u128, z as u128, w as u128])).index());
         },
     );
 }
@@ -315,10 +315,10 @@ fn benchmark_hilbert_2d(c: &mut Criterion) {
         c,
         "insides (hilbert u16)",
         coord_length,
-        |i| black_box(Hilbert::<Fixed<u16, 2>, 2>::from_index(black_box(i as u16)).coords(insides::SFCMethod::Auto)),
+        |i| black_box(Hilbert::<Fixed<u16, 2>, 2>::from_index(black_box(i as u16)).coords()),
         |x, y| {
             black_box(
-                Hilbert::<Fixed<u16, 2>, 2>::from_coords(black_box([x as u16, y as u16]), insides::SFCMethod::Auto).index(),
+                Hilbert::<Fixed<u16, 2>, 2>::from_coords(black_box([x as u16, y as u16])).index(),
             )
         },
     );
@@ -327,10 +327,10 @@ fn benchmark_hilbert_2d(c: &mut Criterion) {
         c,
         "insides (hilbert u32)",
         coord_length,
-        |i| black_box(Hilbert::<Fixed<u32, 2>, 2>::from_index(black_box(i as u32)).coords(insides::SFCMethod::Auto)),
+        |i| black_box(Hilbert::<Fixed<u32, 2>, 2>::from_index(black_box(i as u32)).coords()),
         |x, y| {
             black_box(
-                Hilbert::<Fixed<u32, 2>, 2>::from_coords(black_box([x as u32, y as u32]), insides::SFCMethod::Auto).index(),
+                Hilbert::<Fixed<u32, 2>, 2>::from_coords(black_box([x as u32, y as u32])).index(),
             )
         },
     );
@@ -339,10 +339,10 @@ fn benchmark_hilbert_2d(c: &mut Criterion) {
         c,
         "insides (hilbert u64)",
         coord_length,
-        |i| black_box(Hilbert::<Fixed<u64, 2>, 2>::from_index(black_box(i as u64)).coords(insides::SFCMethod::Auto)),
+        |i| black_box(Hilbert::<Fixed<u64, 2>, 2>::from_index(black_box(i as u64)).coords()),
         |x, y| {
             black_box(
-                Hilbert::<Fixed<u64, 2>, 2>::from_coords(black_box([x as u64, y as u64]), insides::SFCMethod::Auto).index(),
+                Hilbert::<Fixed<u64, 2>, 2>::from_coords(black_box([x as u64, y as u64])).index(),
             )
         },
     );
@@ -351,10 +351,10 @@ fn benchmark_hilbert_2d(c: &mut Criterion) {
         c,
         "insides (hilbert u128)",
         coord_length,
-        |i| black_box(Hilbert::<Fixed<u128, 2>, 2>::from_index(black_box(i as u128)).coords(insides::SFCMethod::Auto)),
+        |i| black_box(Hilbert::<Fixed<u128, 2>, 2>::from_index(black_box(i as u128)).coords()),
         |x, y| {
             black_box(
-                Hilbert::<Fixed<u128, 2>, 2>::from_coords(black_box([x as u128, y as u128]), insides::SFCMethod::Auto).index(),
+                Hilbert::<Fixed<u128, 2>, 2>::from_coords(black_box([x as u128, y as u128])).index(),
             )
         },
     );
@@ -436,12 +436,12 @@ fn benchmark_hilbert_3d(c: &mut Criterion) {
         "insides (hilbert u16)",
         coord_length,
         |i| {
-            black_box(Hilbert::<Fixed<u16, 3>, 3>::from_index(black_box(i as u16)).coords(insides::SFCMethod::Auto));
-            black_box(Hilbert::<Fixed<u16, 3>, 3>::from_index(black_box(i as u16)).coords(insides::SFCMethod::Auto));
+            black_box(Hilbert::<Fixed<u16, 3>, 3>::from_index(black_box(i as u16)).coords());
+            black_box(Hilbert::<Fixed<u16, 3>, 3>::from_index(black_box(i as u16)).coords());
         },
         |x, y, z| {
-            black_box(Hilbert::<Fixed<u16, 3>, 3>::from_coords(black_box([x as u16, y as u16, z as u16]), insides::SFCMethod::Auto).index());
-            black_box(Hilbert::<Fixed<u16, 3>, 3>::from_coords(black_box([x as u16, y as u16, z as u16]), insides::SFCMethod::Auto).index());
+            black_box(Hilbert::<Fixed<u16, 3>, 3>::from_coords(black_box([x as u16, y as u16, z as u16])).index());
+            black_box(Hilbert::<Fixed<u16, 3>, 3>::from_coords(black_box([x as u16, y as u16, z as u16])).index());
         },
     );
 
@@ -450,12 +450,12 @@ fn benchmark_hilbert_3d(c: &mut Criterion) {
         "insides (hilbert u32)",
         coord_length,
         |i| {
-            black_box(Hilbert::<Fixed<u32, 3>, 3>::from_index(black_box(i as u32)).coords(insides::SFCMethod::Auto));
-            black_box(Hilbert::<Fixed<u32, 3>, 3>::from_index(black_box(i as u32)).coords(insides::SFCMethod::Auto));
+            black_box(Hilbert::<Fixed<u32, 3>, 3>::from_index(black_box(i as u32)).coords());
+            black_box(Hilbert::<Fixed<u32, 3>, 3>::from_index(black_box(i as u32)).coords());
         },
         |x, y, z| {
-            black_box(Hilbert::<Fixed<u32, 3>, 3>::from_coords(black_box([x as u32, y as u32, z as u32]), insides::SFCMethod::Auto).index());
-            black_box(Hilbert::<Fixed<u32, 3>, 3>::from_coords(black_box([x as u32, y as u32, z as u32]), insides::SFCMethod::Auto).index());
+            black_box(Hilbert::<Fixed<u32, 3>, 3>::from_coords(black_box([x as u32, y as u32, z as u32])).index());
+            black_box(Hilbert::<Fixed<u32, 3>, 3>::from_coords(black_box([x as u32, y as u32, z as u32])).index());
         },
     );
 
@@ -464,12 +464,12 @@ fn benchmark_hilbert_3d(c: &mut Criterion) {
         "insides (hilbert u64)",
         coord_length,
         |i| {
-            black_box(Hilbert::<Fixed<u64, 3>, 3>::from_index(black_box(i as u64)).coords(insides::SFCMethod::Auto));
-            black_box(Hilbert::<Fixed<u64, 3>, 3>::from_index(black_box(i as u64)).coords(insides::SFCMethod::Auto));
+            black_box(Hilbert::<Fixed<u64, 3>, 3>::from_index(black_box(i as u64)).coords());
+            black_box(Hilbert::<Fixed<u64, 3>, 3>::from_index(black_box(i as u64)).coords());
         },
         |x, y, z| {
-            black_box(Hilbert::<Fixed<u64, 3>, 3>::from_coords(black_box([x as u64, y as u64, z as u64]), insides::SFCMethod::Auto).index());
-            black_box(Hilbert::<Fixed<u64, 3>, 3>::from_coords(black_box([x as u64, y as u64, z as u64]), insides::SFCMethod::Auto).index());
+            black_box(Hilbert::<Fixed<u64, 3>, 3>::from_coords(black_box([x as u64, y as u64, z as u64])).index());
+            black_box(Hilbert::<Fixed<u64, 3>, 3>::from_coords(black_box([x as u64, y as u64, z as u64])).index());
         },
     );
 
@@ -478,12 +478,12 @@ fn benchmark_hilbert_3d(c: &mut Criterion) {
         "insides (hilbert u128)",
         coord_length,
         |i| {
-            black_box(Hilbert::<Fixed<u128, 3>, 3>::from_index(black_box(i as u128)).coords(insides::SFCMethod::Auto));
-            black_box(Hilbert::<Fixed<u128, 3>, 3>::from_index(black_box(i as u128)).coords(insides::SFCMethod::Auto));
+            black_box(Hilbert::<Fixed<u128, 3>, 3>::from_index(black_box(i as u128)).coords());
+            black_box(Hilbert::<Fixed<u128, 3>, 3>::from_index(black_box(i as u128)).coords());
         },
         |x, y, z| {
-            black_box(Hilbert::<Fixed<u128, 3>, 3>::from_coords(black_box([x as u128, y as u128, z as u128]), insides::SFCMethod::Auto).index());
-            black_box(Hilbert::<Fixed<u128, 3>, 3>::from_coords(black_box([x as u128, y as u128, z as u128]), insides::SFCMethod::Auto).index());
+            black_box(Hilbert::<Fixed<u128, 3>, 3>::from_coords(black_box([x as u128, y as u128, z as u128])).index());
+            black_box(Hilbert::<Fixed<u128, 3>, 3>::from_coords(black_box([x as u128, y as u128, z as u128])).index());
         },
     );
 
@@ -528,12 +528,12 @@ fn benchmark_hilbert_4d(c: &mut Criterion) {
         "insides (hilbert u16)",
         coord_length,
         |i| {
-            black_box(Hilbert::<Fixed<u16, 4>, 4>::from_index(black_box(i as u16)).coords(insides::SFCMethod::Auto));
-            black_box(Hilbert::<Fixed<u16, 4>, 4>::from_index(black_box(i as u16)).coords(insides::SFCMethod::Auto));
+            black_box(Hilbert::<Fixed<u16, 4>, 4>::from_index(black_box(i as u16)).coords());
+            black_box(Hilbert::<Fixed<u16, 4>, 4>::from_index(black_box(i as u16)).coords());
         },
         |x, y, z, w| {
-            black_box(Hilbert::<Fixed<u16, 4>, 4>::from_coords(black_box([x as u16, y as u16, z as u16, w as u16]), insides::SFCMethod::Auto).index());
-            black_box(Hilbert::<Fixed<u16, 4>, 4>::from_coords(black_box([x as u16, y as u16, z as u16, w as u16]), insides::SFCMethod::Auto).index());
+            black_box(Hilbert::<Fixed<u16, 4>, 4>::from_coords(black_box([x as u16, y as u16, z as u16, w as u16])).index());
+            black_box(Hilbert::<Fixed<u16, 4>, 4>::from_coords(black_box([x as u16, y as u16, z as u16, w as u16])).index());
         },
     );
 
@@ -542,12 +542,12 @@ fn benchmark_hilbert_4d(c: &mut Criterion) {
         "insides (hilbert u32)",
         coord_length,
         |i| {
-            black_box(Hilbert::<Fixed<u32, 4>, 4>::from_index(black_box(i as u32)).coords(insides::SFCMethod::Auto));
-            black_box(Hilbert::<Fixed<u32, 4>, 4>::from_index(black_box(i as u32)).coords(insides::SFCMethod::Auto));
+            black_box(Hilbert::<Fixed<u32, 4>, 4>::from_index(black_box(i as u32)).coords());
+            black_box(Hilbert::<Fixed<u32, 4>, 4>::from_index(black_box(i as u32)).coords());
         },
         |x, y, z, w| {
-            black_box(Hilbert::<Fixed<u32, 4>, 4>::from_coords(black_box([x as u32, y as u32, z as u32, w as u32]), insides::SFCMethod::Auto).index());
-            black_box(Hilbert::<Fixed<u32, 4>, 4>::from_coords(black_box([x as u32, y as u32, z as u32, w as u32]), insides::SFCMethod::Auto).index());
+            black_box(Hilbert::<Fixed<u32, 4>, 4>::from_coords(black_box([x as u32, y as u32, z as u32, w as u32])).index());
+            black_box(Hilbert::<Fixed<u32, 4>, 4>::from_coords(black_box([x as u32, y as u32, z as u32, w as u32])).index());
         },
     );
 
@@ -556,12 +556,12 @@ fn benchmark_hilbert_4d(c: &mut Criterion) {
         "insides (hilbert u64)",
         coord_length,
         |i| {
-            black_box(Hilbert::<Fixed<u64, 4>, 4>::from_index(black_box(i as u64)).coords(insides::SFCMethod::Auto));
-            black_box(Hilbert::<Fixed<u64, 4>, 4>::from_index(black_box(i as u64)).coords(insides::SFCMethod::Auto));
+            black_box(Hilbert::<Fixed<u64, 4>, 4>::from_index(black_box(i as u64)).coords());
+            black_box(Hilbert::<Fixed<u64, 4>, 4>::from_index(black_box(i as u64)).coords());
         },
         |x, y, z, w| {
-            black_box(Hilbert::<Fixed<u64, 4>, 4>::from_coords(black_box([x as u64, y as u64, z as u64, w as u64]), insides::SFCMethod::Auto).index());
-            black_box(Hilbert::<Fixed<u64, 4>, 4>::from_coords(black_box([x as u64, y as u64, z as u64, w as u64]), insides::SFCMethod::Auto).index());
+            black_box(Hilbert::<Fixed<u64, 4>, 4>::from_coords(black_box([x as u64, y as u64, z as u64, w as u64])).index());
+            black_box(Hilbert::<Fixed<u64, 4>, 4>::from_coords(black_box([x as u64, y as u64, z as u64, w as u64])).index());
         },
     );
 
@@ -570,12 +570,12 @@ fn benchmark_hilbert_4d(c: &mut Criterion) {
         "insides (hilbert u128)",
         coord_length,
         |i| {
-            black_box(Hilbert::<Fixed<u128, 4>, 4>::from_index(black_box(i as u128)).coords(insides::SFCMethod::Auto));
-            black_box(Hilbert::<Fixed<u128, 4>, 4>::from_index(black_box(i as u128)).coords(insides::SFCMethod::Auto));
+            black_box(Hilbert::<Fixed<u128, 4>, 4>::from_index(black_box(i as u128)).coords());
+            black_box(Hilbert::<Fixed<u128, 4>, 4>::from_index(black_box(i as u128)).coords());
         },
         |x, y, z, w| {
-            black_box(Hilbert::<Fixed<u128, 4>, 4>::from_coords(black_box([x as u128, y as u128, z as u128, w as u128]), insides::SFCMethod::Auto).index());
-            black_box(Hilbert::<Fixed<u128, 4>, 4>::from_coords(black_box([x as u128, y as u128, z as u128, w as u128]), insides::SFCMethod::Auto).index());
+            black_box(Hilbert::<Fixed<u128, 4>, 4>::from_coords(black_box([x as u128, y as u128, z as u128, w as u128])).index());
+            black_box(Hilbert::<Fixed<u128, 4>, 4>::from_coords(black_box([x as u128, y as u128, z as u128, w as u128])).index());
         },
     );
 
@@ -648,25 +648,12 @@ fn benchmark_morton_shootout_2d(c: &mut Criterion) {
     // which also puts the value into a u64.
 
     c.bench_function(
-        format!("2d coords to index shootout: insides naive").as_str(),
+        format!("2d coords to index shootout: insides").as_str(),
         |b| {
             b.iter(|| {
                 for y in 0..coord_length {
                     for x in 0..coord_length {
-                        black_box(Morton::<Fixed<u32, 2>, 2>::from_coords(black_box([x as u32, y as u32]), insides::SFCMethod::Naive));
-                    }
-                }
-            })
-        },
-    );
-
-    c.bench_function(
-        format!("2d coords to index shootout: insides explicit").as_str(),
-        |b| {
-            b.iter(|| {
-                for y in 0..coord_length {
-                    for x in 0..coord_length {
-                        black_box(Morton::<Fixed<u32, 2>, 2>::from_coords(black_box([x as u32, y as u32]), insides::SFCMethod::Explicit));
+                        black_box(Morton::<Fixed<u32, 2>, 2>::from_coords(black_box([x as u32, y as u32])));
                     }
                 }
             })
