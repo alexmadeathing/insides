@@ -1,4 +1,4 @@
-//#![no_std]
+#![no_std]
 #![warn(missing_docs)]
 #![warn(rustdoc::missing_doc_code_examples)]
 #![deny(rustdoc::invalid_rust_codeblocks)]
